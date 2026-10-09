@@ -2,23 +2,27 @@
 
 ## Status and scope
 
-This is the current architecture direction carried forward from design discussions. It is intentionally a high-level baseline. The repository should not start by implementing every box shown here; core contracts and a vertical slice come first.
+This is Archeon’s accepted v0 architecture direction. ADRs define the decisions and their remaining implementation-level questions. The repository should not implement every future concept in advance; the first goal is one small, tested vertical slice.
 
 ## Intended model
 
 ```text
-Application
-  └─ Modules
-      └─ Operations
-           └─ definition + contracts + execution behavior
-                    |
-                 Compiler
-                    |
-              Execution Plan
-                    |
-                  Runtime
-                    |
-          configured services/plugins
+defineOperation()
+      |
+      v
+define/register modules
+      |
+      v
+application construction
+  - validate identities
+  - reject duplicates
+  - build one in-memory plan per operation
+      |
+      v
+runtime invocation by operation name
+  - optional input parsing
+  - execute({ input, context })
+  - return value or propagate failure
 ```
 
 Adapters sit at the boundary:
@@ -26,7 +30,7 @@ Adapters sit at the boundary:
 ```text
 HTTP / framework request
           |
-      Environment adapter
+      environment adapter
           |
     operation invocation
           |
@@ -35,25 +39,35 @@ HTTP / framework request
      result / error mapping
 ```
 
+## Core decisions
+
+- **Operation identity:** each operation declares a stable, globally unique name such as `users.create`. Module membership does not change that name.
+- **Modules:** organizational groups of operations; they do not imply a database model or transport.
+- **Registration:** duplicate operation names and duplicate module names fail deterministically. No silent override or merge behavior.
+- **Plan lifecycle:** build one in-memory plan per registered operation during application construction. Resolve plans by operation name at invocation time. Dynamic registration and serialized plans are out of scope for v0.
+- **Handler signature:** handlers receive `{ input, context }` as one object.
+- **Input validation:** an optional, framework-neutral parser may turn unknown input into typed input. TypeScript types alone are not runtime validation.
+- **Errors:** handlers may throw or reject; core propagates failures. Adapters catch failures at external boundaries and map them to safe transport-specific responses.
+- **Execution context:** explicit and typed, initially centered on application-provided services.
+- **Dependencies:** core remains independent of Next.js, React, Prisma, NextAuth, Zod, and database drivers.
+
 ## Boundaries
 
-- **Core:** framework-neutral types, operation/module registration, application configuration, and the minimal planning/execution contracts.
-- **Runtime:** executes the plan and coordinates the execution lifecycle.
-- **Compiler/planner:** transforms registered definitions/configuration into a plan. Start with a small plan builder; do not build an elaborate IR before a concrete need exists.
-- **Plugins/integrations:** provide optional capabilities through explicit contracts. Core must not hard-depend on Prisma, NextAuth, Zod, Redis, or Next.js.
-- **Adapters:** connect framework-specific inputs/outputs such as Next.js requests and responses.
-- **Client integrations:** React hooks or query-library integrations are optional packages, not part of the framework-neutral core.
+- **Core:** operation/module definitions, registration, application construction, and minimal type contracts.
+- **Planner/compiler:** validates and normalizes definitions into small plans. No optimization-heavy compiler or general-purpose IR in v0.
+- **Runtime:** resolves plans, parses input when configured, invokes handlers, and propagates outcomes.
+- **Adapters:** translate transport inputs and outputs without moving HTTP semantics into core.
+- **Integrations:** use explicit contracts or application-provided services; do not make specific third-party tools core dependencies.
+- **Client integrations:** optional; React hooks and query-library integration are not required for the first vertical slice.
 
-## Design constraints
+## Still to specify before implementation hardens
 
-1. The primary abstraction is an **operation**, not CRUD.
-2. Modules group operations; they do not imply a database schema.
-3. Authentication, authorization, rate limiting, validation, persistence, and caching must have explicit boundaries.
-4. A dispatcher/adapter should remain thin: parse/normalize the external request, invoke the configured runtime, map the result.
-5. Keep the initial execution plan small and inspectable.
-6. Add abstractions only when they support a demonstrated use case.
-7. Error handling and lifecycle order must be specified before implementing complex middleware/pipeline behavior.
+- Exact TypeScript inference and parser contract.
+- Framework-level errors and parser-failure semantics.
+- Minimum module/application builder API.
+- Minimum package layout and exports.
+- Whether the first vertical slice needs any plugin contract at all.
 
-## Not yet decided
+## Design principle
 
-The following must be resolved in focused ADRs before implementation hardens them: exact operation input/output contract, sync/async behavior, error/result model, policy evaluation order, service resolution, plan shape, plugin lifecycle, and whether compiler/runtime are separate public packages.
+Every abstraction must justify its existence. Implement operation → application construction → plan → runtime first, and let tested use cases earn additional layers.
