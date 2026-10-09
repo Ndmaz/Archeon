@@ -1,59 +1,79 @@
 # ADR-0008: Execution context and error boundary
 
-- **Status:** Proposed
+- **Status:** Accepted for v0
 - **Date:** 2026-10-09
-- **Scope:** Framework-neutral execution semantics
 
 ## Context
 
 Operations need access to application dependencies and invocation information. Archeon also needs predictable error behavior across direct execution and adapters such as Next.js. The original dispatcher coupled context construction and HTTP status mapping to one framework and authentication setup.
 
-## Proposal: explicit execution context
+## Decision: explicit execution context
 
-The runtime supplies an explicit context to an operation handler. The context should be generic over application-provided services so applications can type their own capabilities without Archeon owning a dependency-injection container.
+The runtime supplies an explicit context to an operation handler through the agreed object argument:
+
+```ts
+execute({ input, context })
+```
+
+The context should be generic over application-provided services so consumers can type their own capabilities without Archeon owning a dependency-injection container.
 
 Illustrative shape only:
 
 ```ts
 type ExecutionContext<TServices> = {
   services: TServices;
-  // Other fields are intentionally undecided.
 };
 ```
 
-Core should not assume a particular shape for authentication identity, database clients, request objects, or loggers. If the runtime needs standard metadata (for example, an invocation ID or cancellation signal), it must be added deliberately with defined semantics.
+This is the minimum conceptual starting point, not a final public type. Core must not assume a particular database client, identity model, request object, or logging vendor. Standard invocation metadata may be added only when a concrete need and its semantics are established.
 
-## Proposal: error boundary
+## Decision: errors throw/reject and propagate
 
-- Operation handlers may throw or reject; the runtime must not silently swallow these failures.
-- The core execution boundary should preserve the original error for programmatic callers or normalize it into a documented framework-neutral error/result contract.
-- Transport adapters map execution outcomes to transport-specific representations. HTTP status codes must not leak into core.
-- Do not expose internal exception messages to untrusted clients by default; adapters/applications choose a safe public error representation.
-- Error normalization must preserve enough information for diagnostics without forcing a logging vendor or observability package into core.
+For v0, operation handlers may throw or reject, and the runtime propagates those failures rather than silently swallowing them or requiring every handler to return a result union.
 
-## Questions to resolve
+Reasons:
+- It preserves ordinary TypeScript and JavaScript async control flow.
+- Successful handlers can return their natural output type without wrapping every value.
+- It avoids imposing a result-wrapper convention on application business logic.
 
-1. Should core expose a discriminated result union, throw errors, or support both through a single documented boundary?
-2. Which errors are framework-level (unknown operation, invalid input, policy denial) versus application-defined?
-3. What stable error codes, if any, should exist in v0?
-4. Does context contain only application-provided services, or also standard invocation metadata?
-5. How should cancellation and deadlines propagate?
-6. Should authorization/policy failures be represented by a core error type or supplied by an integration?
+Trade-offs:
+- Callers that need to branch on failure must use `try/catch`.
+- Adapters need a defined boundary where failures are caught and mapped to their own error representation.
+- Uncaught failures must not become accidental information leaks at external boundaries.
+
+The core runtime must not map errors to HTTP status codes. A framework adapter or application boundary may catch propagated failures and map them to transport-specific responses. Public responses should not expose internal exception messages by default.
+
+## Error behavior requirements
+
+- A successful execution returns the handler's value.
+- A synchronous throw or rejected promise propagates to the caller.
+- Parser/validation failures propagate according to the parser contract; their precise stable error representation remains to be specified.
+- Framework-level errors such as an unknown operation need documented semantics, but do not require a global result-union design.
+- Core should preserve the original error for programmatic callers unless a documented framework-level error is raised.
+- Logging and observability are not mandatory core dependencies.
 
 ## Constraints
 
 - Do not map errors to HTTP status codes in core.
 - Do not require a logger, tracing system, database, or auth provider.
-- Avoid building a general dependency-injection container without a concrete need.
+- Avoid building a general dependency-injection container without a demonstrated need.
 - Define policy/lifecycle ordering before implementing middleware or a pipeline.
 
-## Acceptance criteria before marking accepted
+## Still open
 
-- Type tests prove that service types flow into operation handlers without casts.
-- Unit tests cover successful execution, synchronous throws, asynchronous rejection, and unknown operation behavior.
-- The adapter can map failures to its own response model without changing core.
-- The chosen error contract is documented and demonstrated in the minimal end-to-end example.
+- Which stable framework-level error classes/codes are necessary in v0.
+- Whether parser errors are propagated unchanged or wrapped with operation context.
+- Which invocation metadata, if any, belongs in context.
+- How cancellation and deadlines propagate.
+- How authorization/policy denials are represented by integrations.
+
+## Acceptance criteria
+
+- Type tests prove service types flow into handlers without casts.
+- Unit tests cover successful execution, synchronous throws, async rejection, and unknown operation behavior.
+- Adapters can map failures to their response model without changing core.
+- The error contract is demonstrated in the minimal end-to-end example.
 
 ## Consequences
 
-This ADR establishes explicit context and a transport-neutral error boundary as design goals. Exact fields and error types remain open until the minimal runtime prototype is tested.
+Explicit context and throw/reject propagation are accepted for v0. Exact context fields and stable framework-level error types remain open and must be resolved before implementation hardens them.
