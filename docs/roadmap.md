@@ -26,8 +26,8 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 
 ## Milestone 2 — Minimal end-to-end implementation
 
-- [ ] Implement the smallest framework-neutral core.
-- [ ] Register a module containing one operation.
+- [x] Create the initial framework-neutral core prototype (not yet locally build-verified).
+- [x] Add a basic example registering a module containing one operation (not yet locally typecheck-verified).
 - [ ] Build plans once during application construction.
 - [ ] Execute an operation by its stable name through the runtime.
 - [ ] Add unit and type tests for contracts, registration, planning, and execution.
