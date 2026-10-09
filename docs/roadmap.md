@@ -19,10 +19,10 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 - [x] Accept one in-memory execution plan per registered operation, built during application construction (ADR-0009).
 - [x] Decide explicit globally unique operation names and organizational modules (ADR-0010).
 - [x] Reject duplicate operation and module names; do not silently override (ADR-0010).
-- [ ] Define exact parser types and sync/async behavior.
-- [ ] Define framework-level runtime errors and parser-failure semantics.
-- [ ] Define the smallest viable public API and package layout.
-- [ ] Decide whether a plugin API is required for the first vertical slice.
+- [ ] Finalize parser type inference and whether unparsed input is typed as `unknown` (ADR-0011).
+- [ ] Define the smallest stable framework-level error surface (ADR-0012).
+- [ ] Confirm the minimal package layout and toolchain (ADR-0013).
+- [ ] Define the public TypeScript signatures and prove them with type tests.
 
 ## Milestone 2 — Minimal end-to-end implementation
 
