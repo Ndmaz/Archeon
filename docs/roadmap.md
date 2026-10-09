@@ -8,28 +8,28 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 - [x] Prefer `defineOperation()` as the public definition vocabulary.
 - [x] Establish `main`, `dev`, and `testing` branches.
 - [x] Add the initial README, contribution guide, and architecture-document baseline.
-- [ ] Review and accept the remaining initial architecture proposals.
+- [x] Record the initial core design decisions in ADRs.
 
 ## Milestone 1 — Freeze the minimal architecture
 
 - [x] Decide the v0 handler argument style: `execute({ input, context })` (ADR-0007).
 - [x] Decide that input parsing is optional and framework-neutral (ADR-0007).
 - [x] Decide that handler errors throw/reject and propagate through core (ADR-0008).
-- [x] Establish explicit application-provided services in execution context as the starting point (ADR-0008).
-- [ ] Accept the minimal execution-plan and planner responsibilities (ADR-0009).
-- [ ] Decide module registration, operation identity syntax, and duplicate handling (ADR-0010).
+- [x] Establish explicit application-provided services as the context starting point (ADR-0008).
+- [x] Accept one in-memory execution plan per registered operation, built during application construction (ADR-0009).
+- [x] Decide explicit globally unique operation names and organizational modules (ADR-0010).
+- [x] Reject duplicate operation and module names; do not silently override (ADR-0010).
 - [ ] Define exact parser types and sync/async behavior.
 - [ ] Define framework-level runtime errors and parser-failure semantics.
-- [ ] Define lifecycle/policy ordering only for features actually included in v0.
-- [ ] Decide the minimum package layout based on the vertical slice.
-- [ ] Review plugin boundaries and decide whether a plugin API is needed in the first vertical slice.
+- [ ] Define the smallest viable public API and package layout.
+- [ ] Decide whether a plugin API is required for the first vertical slice.
 
 ## Milestone 2 — Minimal end-to-end implementation
 
 - [ ] Implement the smallest framework-neutral core.
 - [ ] Register a module containing one operation.
-- [ ] Build a plan for that operation.
-- [ ] Execute it through the runtime.
+- [ ] Build plans once during application construction.
+- [ ] Execute an operation by its stable name through the runtime.
 - [ ] Add unit and type tests for contracts, registration, planning, and execution.
 - [ ] Provide one runnable example and validate its types/build.
 
