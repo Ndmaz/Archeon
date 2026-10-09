@@ -1,31 +1,78 @@
 import type { ModuleDefinition } from "./module.js";
 import type { OperationDefinition } from "./operation.js";
-import { DuplicateModuleError, DuplicateOperationError, InvalidOperationNameError, UnknownOperationError } from "./errors.js";
+import {
+  DuplicateModuleError,
+  DuplicateOperationError,
+  InvalidOperationNameError,
+  UnknownOperationError,
+} from "./errors.js";
 
-export interface ExecutionPlan<TServices = unknown> {
+type AnyOperation = OperationDefinition<any, any, any>;
+type AnyModule = ModuleDefinition<any, Record<string, AnyOperation>>;
+
+type OperationsOf<TModule> =
+  TModule extends { readonly operations: infer TOperations }
+    ? TOperations[keyof TOperations]
+    : never;
+
+type OperationsOfModules<TModules extends readonly AnyModule[]> =
+  OperationsOf<TModules[number]>;
+
+type OperationName<TModules extends readonly AnyModule[]> =
+  OperationsOfModules<TModules> extends infer TOperation
+    ? TOperation extends { readonly name: infer TName extends string }
+      ? TName
+      : never
+    : never;
+
+type OutputForName<
+  TModules extends readonly AnyModule[],
+  TName extends string,
+> = OperationsOfModules<TModules> extends infer TOperation
+  ? TOperation extends OperationDefinition<any, any, infer TOutput>
+    ? TOperation["name"] extends TName
+      ? TOutput
+      : never
+    : never
+  : never;
+
+export interface ExecutionPlan {
   readonly operationName: string;
-  readonly invoke: (input: unknown, services: TServices) => Promise<unknown>;
+  readonly invoke: (input: unknown, services: unknown) => Promise<unknown>;
 }
 
-export interface ArcheonApplication<TServices> {
+export interface ApplicationOptions<
+  TServices,
+  TModules extends readonly ModuleDefinition<TServices, any>[],
+> {
+  readonly modules: TModules;
+  readonly services: TServices;
+}
+
+export interface ArcheonApplication<
+  TServices,
+  TModules extends readonly AnyModule[],
+> {
   readonly modules: readonly string[];
-  readonly operationNames: readonly string[];
-  execute<TOutput = unknown>(
-    operationName: string,
+  readonly operationNames: readonly OperationName<TModules>[];
+  execute<TName extends OperationName<TModules>>(
+    operationName: TName,
     input: unknown,
-    services: TServices,
-  ): Promise<TOutput>;
+  ): Promise<Awaited<OutputForName<TModules, TName>>>;
 }
 
 const OPERATION_NAME = /^[a-z0-9]+(?:[.-][a-z0-9]+)*(?:-[a-z0-9]+)*$/;
 
-export function createApplication<TServices>(
-  modules: readonly ModuleDefinition<TServices, any>[],
-): ArcheonApplication<TServices> {
+export function createApplication<
+  TServices,
+  const TModules extends readonly ModuleDefinition<TServices, any>[],
+>(
+  options: ApplicationOptions<TServices, TModules>,
+): ArcheonApplication<TServices, TModules> {
   const moduleNames = new Set<string>();
-  const plans = new Map<string, ExecutionPlan<TServices>>();
+  const plans = new Map<string, ExecutionPlan>();
 
-  for (const module of modules) {
+  for (const module of options.modules) {
     if (moduleNames.has(module.name)) throw new DuplicateModuleError(module.name);
     moduleNames.add(module.name);
 
@@ -35,15 +82,15 @@ export function createApplication<TServices>(
       }
       if (plans.has(operation.name)) throw new DuplicateOperationError(operation.name);
 
-      const plan: ExecutionPlan<TServices> = Object.freeze({
+      const plan: ExecutionPlan = Object.freeze({
         operationName: operation.name,
-        invoke: async (input: unknown, services: TServices): Promise<unknown> => {
+        invoke: async (input: unknown, services: unknown): Promise<unknown> => {
           const parsedInput = operation.input
             ? await operation.input.parse(input)
             : input;
           return await operation.execute({
             input: parsedInput,
-            context: Object.freeze({ services }),
+            context: Object.freeze({ services: services as TServices }),
           });
         },
       });
@@ -51,20 +98,19 @@ export function createApplication<TServices>(
     }
   }
 
-  const operationNames = Object.freeze([...plans.keys()]);
+  const operationNames = Object.freeze([...plans.keys()]) as readonly OperationName<TModules>[];
   const registeredModules = Object.freeze([...moduleNames]);
 
   return Object.freeze({
     modules: registeredModules,
     operationNames,
-    async execute<TOutput = unknown>(
-      operationName: string,
+    async execute<TName extends OperationName<TModules>>(
+      operationName: TName,
       input: unknown,
-      services: TServices,
-    ): Promise<TOutput> {
+    ): Promise<Awaited<OutputForName<TModules, TName>>> {
       const plan = plans.get(operationName);
       if (!plan) throw new UnknownOperationError(operationName);
-      return (await plan.invoke(input, services)) as TOutput;
+      return (await plan.invoke(input, options.services)) as Awaited<OutputForName<TModules, TName>>;
     },
   });
 }
