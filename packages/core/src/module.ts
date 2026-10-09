@@ -2,9 +2,9 @@ import type { OperationDefinition } from "./operation.js";
 
 export interface ModuleDefinition<
   TServices,
-  TOperations extends Record<string, OperationDefinition<TServices, never, unknown>> = Record<
+  TOperations extends Record<string, OperationDefinition<TServices, any, any>> = Record<
     string,
-    OperationDefinition<TServices, never, unknown>
+    OperationDefinition<TServices, any, any>
   >,
 > {
   readonly name: string;
