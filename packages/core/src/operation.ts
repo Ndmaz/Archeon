@@ -15,40 +15,46 @@ export interface OperationDefinition<
   TServices,
   TInput = unknown,
   TOutput = unknown,
+  TName extends string = string,
 > {
-  readonly name: string;
+  readonly name: TName;
   readonly input?: InputParser<TInput>;
   readonly execute: (
     args: OperationArguments<TInput, TServices>,
   ) => TOutput | Promise<TOutput>;
 }
 
-type OperationWithParser<TServices, TInput, TOutput> = {
-  readonly name: string;
+type OperationWithParser<
+  TServices,
+  TInput,
+  TOutput,
+  TName extends string,
+> = {
+  readonly name: TName;
   readonly input: InputParser<TInput>;
   readonly execute: (
     args: OperationArguments<TInput, TServices>,
   ) => TOutput | Promise<TOutput>;
 };
 
-type OperationWithoutParser<TServices, TOutput> = {
-  readonly name: string;
+type OperationWithoutParser<TServices, TOutput, TName extends string> = {
+  readonly name: TName;
   readonly execute: (
     args: OperationArguments<unknown, TServices>,
   ) => TOutput | Promise<TOutput>;
 };
 
 export interface OperationBuilder<TServices> {
-  <TInput, TOutput>(
-    definition: OperationWithParser<TServices, TInput, TOutput>,
-  ): OperationDefinition<TServices, TInput, TOutput>;
-  <TOutput>(
-    definition: OperationWithoutParser<TServices, TOutput>,
-  ): OperationDefinition<TServices, unknown, TOutput>;
+  <TInput, TOutput, const TName extends string>(
+    definition: OperationWithParser<TServices, TInput, TOutput, TName>,
+  ): OperationDefinition<TServices, TInput, TOutput, TName>;
+  <TOutput, const TName extends string>(
+    definition: OperationWithoutParser<TServices, TOutput, TName>,
+  ): OperationDefinition<TServices, unknown, TOutput, TName>;
 }
 
 export function defineOperation<TServices>(): OperationBuilder<TServices> {
-  return ((definition: OperationDefinition<TServices, unknown, unknown>) => {
+  return ((definition: OperationDefinition<TServices, unknown, unknown, string>) => {
     const name = definition.name;
     if (typeof name !== "string" || name.length === 0 || name.trim() !== name) {
       throw new TypeError("Operation name must be a non-empty, trimmed string.");
