@@ -1,71 +1,75 @@
 # ADR-0009: Minimal execution plan for v0
 
-- **Status:** Proposed
+- **Status:** Accepted for v0
 - **Date:** 2026-10-09
 
 ## Context
 
-Archeon is intended to make the path from operation definitions to execution explicit. However, an elaborate compiler or intermediate representation would be premature before a working operation can be registered and executed.
+Archeon needs a visible boundary between operation definitions and runtime execution. An elaborate compiler or intermediate representation would be premature before a working operation can be registered and executed.
 
-## Proposal
+## Decision
 
-For v0, the planner should compile a registered operation definition into a small in-memory execution plan. It should normalize and validate the definition/registration requirements and provide the runtime with the references it needs to execute the operation.
+For v0, application construction builds one in-memory execution plan per registered operation. The resulting application/runtime retains an immutable registry of these plans and resolves a plan by the operation's stable name when invoked.
 
-Conceptual shape only:
+The plan is an internal runtime-oriented representation. It is not a serialized artifact and is not initially a public extension point.
+
+Illustrative shape only:
 
 ```ts
 type ExecutionPlan<TInput, TOutput, TServices> = {
-  operationName: string;
-  parseInput?: (input: unknown) => TInput | Promise<TInput>;
-  execute: (args: {
+  readonly operationName: string;
+  readonly parseInput?: (input: unknown) => TInput | Promise<TInput>;
+  readonly execute: (args: {
     input: TInput;
     context: ExecutionContext<TServices>;
   }) => TOutput | Promise<TOutput>;
 };
 ```
 
-This is illustrative, not a final public type. The plan should not duplicate business logic, serialize functions, or invent generic pipeline stages without a concrete requirement.
+This is conceptual, not a frozen exported type. The actual implementation may retain an operation definition rather than copy its functions into the plan, if that proves simpler and preserves the same behavior.
 
 ## Responsibilities
 
-### Planner/compiler
+### Definition and registration
 
-- Accept registered operation definitions and relevant application configuration.
-- Reject invalid or conflicting definitions before execution where possible.
-- Produce a stable, inspectable in-memory plan.
-- Avoid runtime-specific transport details.
+- Validate that operation and module names are non-empty and well-formed.
+- Reject duplicate operation names and duplicate module names.
+- Avoid implicit replacement, merge, or override behavior.
+- Keep registered definitions stable after application construction.
+
+### Application construction / planning
+
+- Validate registration and definition-level invariants before serving invocations.
+- Build the per-operation plans once, not once per request.
+- Fail application construction deterministically if the registry is invalid.
+- Keep plans in memory and expose no serialization guarantee.
 
 ### Runtime
 
-- Resolve the requested operation plan.
-- Apply the optional input parser when present.
-- Invoke the handler with the parsed input and explicit context.
-- Return the successful value.
-- Propagate handler/parser failures according to the accepted error contract.
+- Resolve a plan by operation name.
+- Apply its optional parser to unknown input when one is configured.
+- Invoke the handler with parsed input and explicit context.
+- Return the handler's value and propagate parser/handler failures.
+- Remain independent of HTTP, database, and validation-library implementations.
 
-The precise ordering of policies and any future lifecycle stages is outside this minimal plan until those stages are specified.
+## Why build once?
 
-## Trade-offs
+Building once detects structural errors before invocation and avoids repeating plan construction for every call. The trade-off is that application configuration and operation definitions should be treated as immutable after construction; dynamic registration is outside v0.
 
-- **Benefits:** a visible definition → plan → execution boundary; a small implementation surface; easy unit testing.
-- **Costs:** an in-memory plan containing function references is not a portable serialized artifact; the initial compiler does little optimization; some validation necessarily remains at invocation time.
-- **Accepted constraint:** v0 optimizes for clarity and correctness, not compiler sophistication.
+## Trade-offs and non-goals
 
-## Questions to resolve
-
-1. Is the plan created once when an application is built, or lazily on first invocation?
-2. Does a plan exist per operation, with runtime lookup by name, or is a selected operation compiled for each invocation?
-3. Which checks belong at definition time, module-registration time, and application-build time?
-4. Should plans be exposed publicly for inspection or remain an internal runtime contract?
-5. What immutability guarantees are required?
+- **Benefits:** explicit definition → plan → runtime separation, deterministic setup, straightforward unit testing.
+- **Costs:** plans contain function references and are not portable serialized artifacts; changing definitions requires rebuilding the application.
+- **Not in v0:** compiler optimization, a general-purpose IR, multi-step workflows, plan serialization, dynamic hot registration, or a public compiler plugin API.
 
 ## Acceptance criteria
 
-- A test demonstrates an operation definition being compiled into a plan and executed.
-- Invalid operation definitions fail deterministically.
-- The runtime has no dependency on HTTP, a database, or a schema library.
-- The plan is minimal and contains only fields required by the first end-to-end use case.
+- A test demonstrates definition → application construction → plan lookup → execution.
+- Invalid names and duplicates fail during registration/application construction.
+- A plan is not rebuilt per invocation.
+- Parser and handler errors propagate.
+- The runtime remains framework-neutral.
 
 ## Consequences
 
-Keep the compiler/planner as a small normalization and validation boundary for v0. Revisit IR, optimization, multi-step plans, and plan serialization only when a real use case requires them.
+The plan lifecycle and scope are accepted for v0. The precise internal type and whether the plan stores function references directly or retains the definition may be decided during implementation, provided the behavior above is preserved.
