@@ -21,7 +21,6 @@ const createUserInput: InputParser<{ email: string }> = {
     ) {
       throw new TypeError("Expected input.email to be a string.");
     }
-
     return { email: value.email };
   },
 };
@@ -37,16 +36,15 @@ const users = defineModule({
   operations: { create: createUser },
 });
 
-const app = createApplication<Services>([users]);
+const app = createApplication({
+  modules: [users],
+  services: {
+    users: {
+      create: async (input) => ({ id: "user_1", email: input.email }),
+    },
+  } satisfies Services,
+});
 
 export async function example() {
-  return app.execute(
-    "users.create",
-    { email: "hello@example.com" },
-    {
-      users: {
-        create: async (input) => ({ id: "user_1", email: input.email }),
-      },
-    },
-  );
+  return app.execute("users.create", { email: "hello@example.com" });
 }
