@@ -28,10 +28,10 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 
 - [x] Create the initial framework-neutral core prototype (not yet locally build-verified).
 - [x] Add a basic example registering a module containing one operation (not yet locally typecheck-verified).
-- [ ] Build plans once during application construction.
-- [ ] Execute an operation by its stable name through the runtime.
-- [ ] Add unit and type tests for contracts, registration, planning, and execution.
-- [ ] Provide one runnable example and validate its types/build.
+- [x] Build plans once during application construction.
+- [x] Execute an operation by its stable name through the runtime.
+- [x] Add unit tests for parser/handler failures, duplicate registrations, unknown operations, and execution; CI type-checks core.
+- [x] Add a basic consumer example and pass its TypeScript check in CI.
 
 ## Milestone 3 — Adapter and integration proof
 
@@ -46,7 +46,7 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 - [ ] Operation/module guide.
 - [ ] Execution-context and service guide.
 - [ ] Adapter and plugin guides.
-- [ ] Tests, type checks, build, and example validation in CI.
+- [x] CI validates type-checking, tests, build, and example types.
 
 ## Milestone 5 — First release
 
