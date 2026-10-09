@@ -19,23 +19,25 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 - [x] Accept one in-memory execution plan per registered operation, built during application construction (ADR-0009).
 - [x] Decide explicit globally unique operation names and organizational modules (ADR-0010).
 - [x] Reject duplicate operation and module names; do not silently override (ADR-0010).
-- [ ] Finalize parser type inference and whether unparsed input is typed as `unknown` (ADR-0011).
-- [ ] Define the smallest stable framework-level error surface (ADR-0012).
-- [ ] Confirm the minimal package layout and toolchain (ADR-0013).
-- [ ] Define the public TypeScript signatures and prove them with type tests.
+- [x] Keep parser inference framework-neutral; unparsed input is `unknown` (ADR-0011 and implementation).
+- [x] Define the initial framework-level registration/lookup error surface (ADR-0012 and implementation); revisit before stable release.
+- [x] Confirm the minimal package layout and pnpm workspace toolchain (ADR-0013 and repository).
+- [x] Type-check the public invocation signatures and infer outputs from operation names in CI.
 
 ## Milestone 2 — Minimal end-to-end implementation
 
-- [x] Create the initial framework-neutral core prototype (not yet locally build-verified).
-- [x] Add a basic example registering a module containing one operation (not yet locally typecheck-verified).
+- [x] Create and CI-validate the initial framework-neutral core.
+- [x] Add a basic consumer example and validate its types in CI.
 - [x] Build plans once during application construction.
 - [x] Execute an operation by its stable name through the runtime.
-- [x] Add unit tests for parser/handler failures, duplicate registrations, unknown operations, and execution; CI type-checks core.
+- [x] Add unit tests for parser/handler failures, duplicate registrations, invalid names, unknown operations, and execution.
 - [x] Add a basic consumer example and pass its TypeScript check in CI.
 
 ## Milestone 3 — Adapter and integration proof
 
-- [ ] Add a thin Next.js adapter only after the core invocation contract is stable.
+- [x] Bind application services at construction and use `app.execute(name, input)` (ADR-0014).
+
+- [ ] Add a thin Next.js adapter after request-scope context is designed.
 - [ ] Prove error and HTTP response mapping.
 - [ ] Add validation/auth integrations only through agreed interfaces.
 - [ ] Evaluate whether React hooks or other client helpers are needed for v0.
