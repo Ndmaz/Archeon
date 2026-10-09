@@ -5,12 +5,14 @@ import {
   defineOperation,
   DuplicateModuleError,
   DuplicateOperationError,
+  InvalidOperationNameError,
   UnknownOperationError,
 } from "./index.js";
 
+type User = { id: string; email: string };
 type Services = {
   users: {
-    create(input: { email: string }): Promise<{ id: string; email: string }>;
+    create(input: { email: string }): Promise<User>;
   };
 };
 
@@ -28,94 +30,100 @@ const emailParser = {
   },
 };
 
-describe("Archeon core vertical slice", () => {
-  it("parses input, infers services, and executes the operation", async () => {
-    const createUser = defineOperation<Services>()({
-      name: "users.create",
-      input: emailParser,
-      execute: async ({ input, context }) => {
-        return context.services.users.create(input);
-      },
-    });
+const makeCreateUser = () => defineOperation<Services>()({
+  name: "users.create",
+  input: emailParser,
+  execute: async ({ input, context }) => context.services.users.create(input),
+});
 
-    const module = defineModule({
+describe("Archeon core vertical slice", () => {
+  it("parses input, binds services, and infers the handler output", async () => {
+    const createUser = makeCreateUser();
+    const users = defineModule({
       name: "user-management",
       operations: { create: createUser },
     });
+    const app = createApplication({
+      modules: [users],
+      services: {
+        users: {
+          create: async (input) => ({ id: "u1", email: input.email }),
+        },
+      } satisfies Services,
+    });
 
-    const application = createApplication<Services>([module]);
-    const result = await application.execute<{ id: string; email: string }>(
-      "users.create",
-      { email: "dev@example.com" },
-      { users: { create: async (input) => ({ id: "u1", email: input.email }) } },
-    );
-
+    const result = await app.execute("users.create", { email: "dev@example.com" });
     expect(result).toEqual({ id: "u1", email: "dev@example.com" });
+    // Compile-time regression: result is inferred as User, not unknown.
+    const inferred: User = result;
+    expect(inferred.id).toBe("u1");
   });
 
   it("propagates parser errors and does not execute the handler", async () => {
-    const execute = vi.fn(() => "should not run");
+    const execute = vi.fn(async () => ({ id: "u1", email: "x@y.z" }));
     const operation = defineOperation<Services>()({
       name: "users.create",
       input: emailParser,
       execute,
     });
-    const app = createApplication<Services>([
-      defineModule({ name: "users", operations: { create: operation } }),
-    ]);
+    const app = createApplication({
+      modules: [defineModule({ name: "users", operations: { create: operation } })],
+      services: { users: { create: async (input) => ({ id: "u1", email: input.email }) } } satisfies Services,
+    });
 
-    await expect(app.execute("users.create", { email: 42 }, {
-      users: { create: async (input) => ({ id: "u1", email: input.email }) },
-    })).rejects.toThrow("Expected an object");
+    await expect(app.execute("users.create", { email: 42 })).rejects.toThrow("Expected an object");
     expect(execute).not.toHaveBeenCalled();
   });
 
-  it("propagates handler failures", async () => {
+  it("propagates handler failures unchanged", async () => {
     const failure = new Error("database unavailable");
     const operation = defineOperation<Services>()({
       name: "users.create",
       input: emailParser,
       execute: async () => { throw failure; },
     });
-    const app = createApplication<Services>([
-      defineModule({ name: "users", operations: { create: operation } }),
-    ]);
+    const app = createApplication({
+      modules: [defineModule({ name: "users", operations: { create: operation } })],
+      services: { users: { create: async (input) => ({ id: "u1", email: input.email }) } } satisfies Services,
+    });
 
-    await expect(app.execute("users.create", { email: "a@b.com" }, {
-      users: { create: async (input) => ({ id: "u1", email: input.email }) },
-    })).rejects.toBe(failure);
+    await expect(app.execute("users.create", { email: "a@b.com" })).rejects.toBe(failure);
   });
 
   it("rejects duplicate operation names", () => {
-    const first = defineOperation<Services>()({
-      name: "users.create",
-      execute: ({ input }) => input,
-    });
-    const second = defineOperation<Services>()({
-      name: "users.create",
-      execute: ({ input }) => input,
-    });
+    const first = defineOperation<Services>()({ name: "users.create", execute: ({ input }) => input });
+    const second = defineOperation<Services>()({ name: "users.create", execute: ({ input }) => input });
 
-    expect(() => createApplication<Services>([
-      defineModule({ name: "first", operations: { first } }),
-      defineModule({ name: "second", operations: { second } }),
-    ])).toThrow(DuplicateOperationError);
+    expect(() => createApplication({
+      modules: [
+        defineModule({ name: "first", operations: { first } }),
+        defineModule({ name: "second", operations: { second } }),
+      ],
+      services: { users: { create: async (input) => ({ id: "u1", email: input.email }) } } satisfies Services,
+    })).toThrow(DuplicateOperationError);
   });
 
   it("rejects duplicate module names", () => {
-    const operation = defineOperation<Services>()({
-      name: "users.create",
-      execute: ({ input }) => input,
-    });
+    const operation = defineOperation<Services>()({ name: "users.create", execute: ({ input }) => input });
     const module = defineModule({ name: "users", operations: { create: operation } });
 
-    expect(() => createApplication<Services>([module, module])).toThrow(DuplicateModuleError);
+    expect(() => createApplication({
+      modules: [module, module],
+      services: { users: { create: async (input) => ({ id: "u1", email: input.email }) } } satisfies Services,
+    })).toThrow(DuplicateModuleError);
+  });
+
+  it("rejects invalid operation names", () => {
+    const operation = defineOperation<Services>()({ name: "Users Create", execute: ({ input }) => input });
+    expect(() => createApplication({
+      modules: [defineModule({ name: "users", operations: { operation } })],
+      services: { users: { create: async (input) => ({ id: "u1", email: input.email }) } } satisfies Services,
+    })).toThrow(InvalidOperationNameError);
   });
 
   it("rejects unknown operations", async () => {
-    const app = createApplication<Services>([]);
-    await expect(app.execute("users.missing", {}, {
-      users: { create: async (input) => ({ id: "u1", email: input.email }) },
-    })).rejects.toThrow(UnknownOperationError);
+    const app = createApplication({ modules: [], services: { users: { create: async (input) => ({ id: "u1", email: input.email }) } } satisfies Services });
+    // @ts-expect-error Unknown names are rejected by the public API at compile time.
+    await expect(app.execute("users.missing", {})).rejects.toThrow(UnknownOperationError);
   });
 });
