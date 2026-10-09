@@ -27,11 +27,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
 
       - name: Install dependencies
-        # The lockfile must be committed to make installs reproducible.
-        # Until it is present on this branch, allow pnpm to resolve dependencies.
+        # Use a normal install until the generated lockfile is committed to this branch.
         run: pnpm install --no-frozen-lockfile
 
       - name: Typecheck core
