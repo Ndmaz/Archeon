@@ -1,58 +1,72 @@
 # ADR-0010: Module registration and operation identity
 
-- **Status:** Proposed
+- **Status:** Accepted for v0
 - **Date:** 2026-10-09
 
 ## Context
 
-Archeon needs a predictable way to group operations and resolve them at runtime. Modules should organize capabilities without implying a database model, transport, or mandatory service container. Registration must reject ambiguous definitions rather than silently overwrite operations.
+Archeon needs a predictable way to group operations and resolve them at runtime. Modules organize capabilities without implying a database model, transport, or mandatory service container. Registration must reject ambiguous definitions rather than silently overwrite operations.
 
-## Proposal
+## Decision
 
-A module is a named grouping of operation definitions. An application registers modules, and the application-level registry resolves each operation by a stable operation name.
+A module is a named grouping of operation definitions. Each operation declares its own globally unique name. Module names organize operations but do not automatically create, rewrite, or prefix operation identity.
 
 Illustrative shape only:
 
 ```ts
+const createUser = defineOperation({
+  name: "users.create",
+  execute: async ({ input, context }) => {
+    return context.services.users.create(input);
+  },
+});
+
 const userModule = defineModule({
-  name: "users",
+  name: "user-management",
   operations: {
     create: createUser,
-    disable: disableUser,
   },
 });
 ```
 
-The public signature and whether module keys compose operation names are not frozen by this proposal.
+The operation name and module name intentionally serve different purposes:
+- `users.create` is the stable runtime lookup identity.
+- `user-management` is an organizational registration unit.
+- The object key `create` is a local label inside the module; it does not override the operation's declared name.
 
-## Identity proposal
+The exact exported function signature remains subject to type tests, but these identity semantics are accepted for v0.
 
-- Each operation has a stable, non-empty name.
-- Runtime lookup uses the operation name, not a database model or HTTP route.
-- Duplicate operation names across the final application registry are an error.
-- Duplicate module names are an error unless a future, explicit composition mechanism defines otherwise.
-- Registration must not silently replace an existing operation.
-- The first implementation should prefer deterministic registration and clear errors over implicit override/merge behavior.
+## Naming rules
 
-## Trade-offs
+- Operation names are non-empty, globally unique, dot-separated identifiers such as `users.create` or `payments.verify`.
+- Each segment uses lowercase letters and digits, with internal hyphens permitted; segments cannot be empty.
+- Module names are non-empty lowercase slugs; internal hyphens are permitted.
+- Names are compared exactly. The registry does not silently lowercase, trim, or otherwise normalize an identifier.
+- Duplicate operation names across any modules are errors.
+- Duplicate module names are errors.
+- An operation may be grouped in a module, but module membership does not alter the operation's name.
+- Registration never silently replaces an existing module or operation.
 
-Rejecting duplicates may make plugin composition more explicit, but prevents order-dependent behavior and accidental replacement. A flat operation-name registry is simple to reason about; namespacing and module ownership can remain visible in the operation's name and module structure.
+## Why not compose operation names from module keys?
 
-## Open questions
+Deriving identity from module name and object key can be ergonomic, but it makes identity dependent on where an operation is registered. The same operation could acquire a different runtime identity if moved between modules. Explicit operation names preserve stable identity and allow modules to be organizational rather than semantic namespaces.
 
-1. Must an operation name be globally qualified (for example, `users.create`) or can the module name and operation key compose it?
-2. Should operation keys have to match the final segment of an operation name?
-3. Are modules immutable after application construction?
-4. How should a plugin contribute operations while respecting duplicate detection?
-5. What name syntax and normalization rules should v0 enforce?
+The trade-off is some redundancy and the need to choose a name when defining an operation. We accept that clarity for v0.
+
+## Registration behavior
+
+- Modules and operation definitions are validated before application execution begins.
+- Registration is deterministic and rejects conflicts rather than merging or overriding.
+- The application registry is treated as immutable after construction in v0.
+- Dynamic registration and hot replacement are out of scope.
 
 ## Acceptance criteria
 
-- Tests cover successful module registration and lookup.
-- Duplicate module and operation names fail deterministically.
+- Tests cover valid names, invalid names, duplicate operation names across modules, and duplicate module names.
+- Moving an operation between modules does not change its declared runtime identity.
 - Registration does not mutate or overwrite previously registered definitions.
 - Registry behavior is framework-neutral and independent of persistence.
 
 ## Consequences
 
-This proposal favors explicit identity and fail-fast duplicate detection. Exact naming syntax and module API remain open until the minimal TypeScript API is implemented and tested.
+Operation identity is explicit and globally unique; modules are organizational groupings. This choice avoids implicit namespace and override behavior in the first implementation.
