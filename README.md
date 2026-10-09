@@ -27,7 +27,7 @@ The repository currently contains the design baseline and development workflow. 
 - `dev` — integration branch for active development and architecture work.
 - `testing` — temporary integration-validation branch before promotion to `main`.
 
-Use short-lived `feature/*`, `docs/*`, or `fix/*` branches from `dev`. Merge into `dev) through pull requests; promote validated work from `dev` to `testing`, then from `testing` to `main`. Avoid direct commits to `main`.
+Use short-lived `feature/*`, `docs/*`, or `fix/*` branches from `dev`. Merge into `dev` through pull requests; promote validated work from `dev` to `testing`, then from `testing` to `main`. Avoid direct commits to `main`.
 
 See [the architecture overview](docs/architecture/overview.md), [terminology](docs/terminology.md), [roadmap](docs/roadmap.md), and [ADRs](docs/adr/).
 
