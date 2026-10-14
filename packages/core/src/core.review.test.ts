@@ -6,6 +6,7 @@ import {
   DuplicateModuleError,
   DuplicateOperationError,
   InvalidOperationNameError,
+  InvalidModuleDefinitionError,
   UnknownOperationError,
 } from "./index.js";
 
@@ -224,5 +225,59 @@ describe("Archeon core review regressions", () => {
         },
       },
     });
+  });
+
+  it("snapshots the operation map at module definition time", () => {
+    const source = {
+      count: defineOperation<Services>()({
+        name: "users.count",
+        execute: ({ context }) => context.services.users.count(),
+      }),
+    };
+    const module = defineModule({ name: "snapshot-module", operations: source });
+    (source as Record<string, unknown>).extra = defineOperation<Services>()({
+      name: "users.extra",
+      execute: ({ context }) => context.services.users.count(),
+    });
+    const app = createApplication({ modules: [module], services });
+    expect(app.operationNames).toEqual(["users.count"]);
+  });
+
+  it("accepts the intended operation-name grammar and rejects malformed names", () => {
+    const makeApp = (name: string) => {
+      const operation = defineOperation<Services>()({
+        name,
+        execute: ({ context }) => context.services.users.count(),
+      });
+      return createApplication({
+        modules: [defineModule({ name: "names", operations: { operation } })],
+        services,
+      });
+    };
+    for (const name of ["users.count", "users-count", "users.v2-count", "v1.users.count"]) {
+      expect(() => makeApp(name)).not.toThrow();
+    }
+    for (const name of ["Users.count", "users count", ".users", "users.", "users..count", "users--count", " users.count"]) {
+      expect(() => makeApp(name)).toThrow(InvalidOperationNameError);
+    }
+  });
+
+  it("rejects malformed module objects at application construction", () => {
+    const operation = defineOperation<Services>()({
+      name: "users.count",
+      execute: ({ context }) => context.services.users.count(),
+    });
+    expect(() => createApplication({
+      modules: [{ name: "Invalid Module", operations: { count: operation } }] as never,
+      services,
+    })).toThrow(InvalidModuleDefinitionError);
+    expect(() => createApplication({
+      modules: [{ name: "valid-module", operations: null }] as never,
+      services,
+    })).toThrow(InvalidModuleDefinitionError);
+    expect(() => createApplication({
+      modules: [{ name: "valid-module", operations: { count: { name: "users.count", execute: 42 } } }] as never,
+      services,
+    })).toThrow(InvalidModuleDefinitionError);
   });
 });
