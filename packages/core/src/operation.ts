@@ -1,3 +1,5 @@
+import { InvalidOperationNameError } from "./errors.js";
+
 export interface InputParser<TInput> {
   parse(input: unknown): TInput | Promise<TInput>;
 }
@@ -56,8 +58,11 @@ export interface OperationBuilder<TServices> {
 export function defineOperation<TServices>(): OperationBuilder<TServices> {
   return ((definition: OperationDefinition<TServices, unknown, unknown, string>) => {
     const name = definition.name;
-    if (typeof name !== "string" || name.length === 0 || name.trim() !== name) {
-      throw new TypeError("Operation name must be a non-empty, trimmed string.");
+    if (
+      typeof name !== "string" ||
+      !/^[a-z0-9]+(?:[.-][a-z0-9]+)*(?:-[a-z0-9]+)*$/.test(name)
+    ) {
+      throw new InvalidOperationNameError(String(name));
     }
 
     return Object.freeze({ ...definition });
