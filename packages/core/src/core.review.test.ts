@@ -206,4 +206,23 @@ describe("Archeon core review regressions", () => {
     expect(invalidName.code).toBe("INVALID_OPERATION_NAME");
     expect(unknownOperation.code).toBe("UNKNOWN_OPERATION");
   });
+
+  it("rejects service objects that do not satisfy an operation's declared context", () => {
+    const operation = defineOperation<Services>()({
+      name: "users.count",
+      execute: ({ context }) => context.services.users.count(),
+    });
+    const module = defineModule({ name: "users", operations: { count: operation } });
+
+    // Compile-time contract: operation requirements must constrain application services.
+    // @ts-expect-error users.count() is required by the operation's declared Services type.
+    createApplication({
+      modules: [module],
+      services: {
+        users: {
+          create: async (input: { email: string }) => ({ id: "u-1", email: input.email }),
+        },
+      },
+    });
+  });
 });
