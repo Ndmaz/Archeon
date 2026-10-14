@@ -3,7 +3,7 @@
 - **Review branch:** `testing`
 - **Reviewed baseline:** `dev` at `f6f878848f2016b84fbc77afded3a764e340e79b`
 - **Scope:** `packages/core/src`, package/workspace configuration, current tests, and CI
-- **Status:** Initial review; findings below are not all fixed in this branch
+- **Status:** Review in progress; changes are on `testing` and awaiting a green CI run
 
 ## Summary
 
@@ -17,7 +17,7 @@ The core is small and readable, and its first vertical slice has CI coverage. Th
 
 Operations declare their context service type, while `createApplication()` infers its own `TServices` from a combination of the options object and module constraint. The intended contract is that every operation's required services must be satisfied by the single application-bound services object. This needs an explicit compile-time regression test, particularly because `defineModule()` derives its service type through conditional types and `any`-based constraints.
 
-**Action:** A type-level regression case has been added to `core.review.test.ts`. CI must prove that it is rejected by TypeScript (the `@ts-expect-error` directive must be consumed). If CI reports an unused directive, treat it as a real type-safety defect.
+**Resolution in progress:** The type-level regression case is now included in TypeScript validation through `tsconfig.test.json`. The first run exposed that the `@ts-expect-error` directive was on the wrong line and that the service object was indeed rejected by the compiler; the directive was moved to the `services` property. `createApplication()` has also been changed to derive required services from the registered modules. Await the latest CI result before marking this finding closed.
 
 ### R2 — Medium: validate module definitions at the runtime registration boundary
 
@@ -27,7 +27,7 @@ Operations declare their context service type, while `createApplication()` infer
 
 **Risk:** The helpers provide good ergonomics, but should not be mistaken for runtime guarantees when untrusted or untyped code can call the public API.
 
-**Action:** Add tests for malformed module objects and decide whether construction should reject them with a stable Archeon error or whether the API explicitly requires helper-created definitions. Prefer a small validation boundary over broad defensive programming.
+**Resolution in progress:** `createApplication()` now checks module shape, module slug, operation shape, handler function, and parser contract, using `InvalidModuleDefinitionError`. Regression tests cover malformed module names, missing operations objects, and non-function handlers. Await CI before marking closed.
 
 ### R3 — Medium: operation-name grammar should have focused edge-case tests
 
@@ -35,7 +35,7 @@ Operations declare their context service type, while `createApplication()` infer
 
 The definition helper currently checks that names are non-empty and trimmed, while application construction applies a stricter regular expression. That split can be intentional—definitions may be composed before registration—but it means a definition can be created successfully and later fail during application construction.
 
-**Action:** Document this boundary and test valid dot/hyphen-separated names, uppercase names, spaces, leading/trailing separators, and repeated separators. Keep the accepted grammar consistent with the ADRs.
+**Resolution in progress:** `defineOperation()` and application registration now use the same operation-name grammar, and tests cover valid dot/hyphen-separated names plus uppercase, whitespace, leading/trailing, and repeated separators. The test run caught the former helper/registration inconsistency; the fix is on `testing` and awaiting CI.
 
 ### R4 — Medium: protect the immutability and registration-snapshot contract
 
@@ -59,7 +59,7 @@ The repository uses pnpm workspaces and a root `pnpm-lock.yaml`, but also contai
 
 Runtime tests and compile-time assertions serve different purposes. The current CI type-check step is important because Vitest alone does not prove all compile-time expectations unless the test files are included in the TypeScript program.
 
-**Action:** Keep the test files included in `pnpm typecheck`. If the suite grows, split runtime tests and type tests into clear files or use dedicated type-test tooling, but do not add a dependency solely for a handful of assertions.
+**Resolution in progress:** Added `tsconfig.test.json` and changed the core typecheck script to include test files. This has already proven valuable by catching a service-contract type regression and an incorrectly positioned `@ts-expect-error` directive.
 
 ## Test coverage added on `testing`
 
@@ -75,6 +75,9 @@ The review regression suite covers:
 - duplicate operation names across modules;
 - runtime protection against unknown names from dynamic callers;
 - stable error codes;
+- malformed module/operation object rejection;
+- consistent operation-name grammar and edge cases;
+- registration snapshot behavior when the source operations map is later mutated;
 - compile-time rejection of an incomplete service object.
 
 ## Review disposition
