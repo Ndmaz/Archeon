@@ -218,8 +218,8 @@ describe("Archeon core review regressions", () => {
     // Compile-time contract: operation requirements must constrain application services.
     createApplication({
       modules: [module],
-      // @ts-expect-error users.count() is required by the operation's declared Services type.
       services: {
+        // @ts-expect-error users.count() is required by the operation's declared Services type.
         users: {
           create: async (input: { email: string }) => ({ id: "u-1", email: input.email }),
         },
