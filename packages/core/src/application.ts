@@ -10,6 +10,13 @@ import {
 
 type AnyOperation = OperationDefinition<any, any, any>;
 type AnyModule = ModuleDefinition<any, Record<string, AnyOperation>>;
+type ServicesOfModule<TModule> =
+  TModule extends ModuleDefinition<infer TServices, any> ? TServices : never;
+type UnionToIntersection<T> =
+  (T extends unknown ? (value: T) => void : never) extends
+    (value: infer TIntersection) => void ? TIntersection : never;
+type ServicesRequiredByModules<TModules extends readonly AnyModule[]> =
+  UnionToIntersection<ServicesOfModule<TModules[number]>>;
 
 type OperationsOf<TModule> =
   TModule extends { readonly operations: infer TOperations }
@@ -42,12 +49,9 @@ export interface ExecutionPlan {
   readonly invoke: (input: unknown, services: unknown) => Promise<unknown>;
 }
 
-export interface ApplicationOptions<
-  TServices,
-  TModules extends readonly ModuleDefinition<TServices, any>[],
-> {
+export interface ApplicationOptions<TModules extends readonly AnyModule[]> {
   readonly modules: TModules;
-  readonly services: TServices;
+  readonly services: ServicesRequiredByModules<TModules>;
 }
 
 export interface ArcheonApplication<
@@ -65,11 +69,10 @@ export interface ArcheonApplication<
 const OPERATION_NAME = /^[a-z0-9]+(?:[.-][a-z0-9]+)*(?:-[a-z0-9]+)*$/;
 
 export function createApplication<
-  TServices,
-  const TModules extends readonly ModuleDefinition<TServices, any>[],
+  const TModules extends readonly AnyModule[],
 >(
-  options: ApplicationOptions<TServices, TModules>,
-): ArcheonApplication<TServices, TModules> {
+  options: ApplicationOptions<TModules>,
+): ArcheonApplication<ServicesRequiredByModules<TModules>, TModules> {
   const moduleNames = new Set<string>();
   const plans = new Map<string, ExecutionPlan>();
 
@@ -92,7 +95,7 @@ export function createApplication<
     if (moduleNames.has(module.name)) throw new DuplicateModuleError(module.name);
     moduleNames.add(module.name);
 
-    for (const operation of Object.values(module.operations) as OperationDefinition<TServices, any, any>[]) {
+    for (const operation of Object.values(module.operations) as OperationDefinition<ServicesRequiredByModules<TModules>, any, any>[]) {
       if (
         typeof operation !== "object" ||
         operation === null ||
@@ -118,7 +121,7 @@ export function createApplication<
             : input;
           return await operation.execute({
             input: parsedInput,
-            context: Object.freeze({ services: services as TServices }),
+            context: Object.freeze({ services: services as ServicesRequiredByModules<TModules> }),
           });
         },
       });
