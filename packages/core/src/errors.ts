@@ -31,3 +31,9 @@ export class InvalidOperationNameError extends ArcheonError {
     super("INVALID_OPERATION_NAME", `Invalid operation name: "${name}".`);
   }
 }
+
+export class InvalidModuleDefinitionError extends ArcheonError {
+  constructor(message: string) {
+    super("INVALID_MODULE_DEFINITION", message);
+  }
+}

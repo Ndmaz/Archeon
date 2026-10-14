@@ -113,12 +113,13 @@ describe("Archeon core vertical slice", () => {
     })).toThrow(DuplicateModuleError);
   });
 
-  it("rejects invalid operation names", () => {
-    const operation = defineOperation<Services>()({ name: "Users Create", execute: ({ input }) => input });
-    expect(() => createApplication({
-      modules: [defineModule({ name: "users", operations: { operation } })],
-      services: { users: { create: async (input) => ({ id: "u1", email: input.email }) } } satisfies Services,
-    })).toThrow(InvalidOperationNameError);
+  it("rejects invalid operation names at definition time", () => {
+    expect(() =>
+      defineOperation<Services>()({
+        name: "Users Create",
+        execute: ({ input }) => input,
+      }),
+    ).toThrow(InvalidOperationNameError);
   });
 
   it("rejects unknown operations", async () => {

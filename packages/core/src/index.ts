@@ -3,6 +3,7 @@ export {
   DuplicateModuleError,
   DuplicateOperationError,
   InvalidOperationNameError,
+  InvalidModuleDefinitionError,
   UnknownOperationError,
 } from "./errors.js";
 export { createApplication } from "./application.js";
