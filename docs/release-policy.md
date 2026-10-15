@@ -23,4 +23,4 @@ This describes the environment exercised by CI; it is not a promise that every v
 
 ## License
 
-A license has not yet been selected. Do not publish the packages or represent the repository as granting a particular open-source license until the project owner chooses one and the corresponding LICENSE file is committed.
+Archeon is licensed under the MIT License. The repository root `LICENSE` file contains the license text. Keep this license metadata consistent across both published packages and the repository documentation.
