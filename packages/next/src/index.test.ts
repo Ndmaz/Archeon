@@ -87,15 +87,15 @@ describe("@archeon/next", () => {
 
   it("constrains the adapter to registered operations and the application's request-context type", () => {
     const app = makeApp();
-    // @ts-expect-error This application has no operation named users.missing.
     createNextHandler(app, {
+      // @ts-expect-error This application has no operation named users.missing.
       operation: "users.missing",
       getInput: () => ({}),
     });
-    // @ts-expect-error requestId must be a string in this application's RequestContext.
     createNextHandler(app, {
       operation: "users.create",
       getInput: () => ({}),
+      // @ts-expect-error requestId must be a string in this application's RequestContext.
       getRequestContext: () => ({ requestId: 42, principal: null }),
     });
   });
