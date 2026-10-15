@@ -111,7 +111,9 @@ describe("@archeon/next", () => {
     });
     const app = createApplication({
       modules: [defineModule({ name: "context", operations: { inspect: operation } })],
-      services,
+      services: {
+        users: { create: async (input) => ({ id: "u-1", email: input.email }) },
+      } satisfies Services,
     });
     const handler = createNextHandler(app, {
       operation: "context.inspect",
