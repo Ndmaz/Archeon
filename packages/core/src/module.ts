@@ -1,6 +1,6 @@
 import type { OperationDefinition } from "./operation.js";
 
-type AnyOperation = OperationDefinition<any, any, any>;
+type AnyOperation = OperationDefinition<any, any, any, any, any>;
 
 type ServicesOf<TOperation> =
   TOperation extends OperationDefinition<infer TServices, any, any>
