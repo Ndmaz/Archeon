@@ -56,7 +56,7 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 ## Milestone 5 — Package and release readiness
 
 - [ ] Add a minimal runnable example for the Next.js adapter or verify the existing example covers it.
-- [ ] Add package-consumer smoke tests against packed tarballs, not only workspace imports.
+- [x] Add package-consumer smoke tests against packed tarballs, not only workspace imports.
 - [ ] Review package exports, generated declarations, and included files.
 - [ ] Decide package names, exports, license, and compatibility policy.
 - [ ] Inspect build output and published package contents.
