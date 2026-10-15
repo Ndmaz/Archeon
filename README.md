@@ -2,9 +2,9 @@
 
 **An operation runtime for TypeScript applications.**
 
-Archeon explores a typed, operation-first model for composing application capabilities, compiling their definitions into execution plans, and running them through a pluggable runtime.
+Archeon provides a typed, operation-first model for defining application capabilities, compiling their definitions into execution plans, and running them through a framework-neutral core.
 
-> **Project status:** architecture and repository foundation. The architecture documents record our current design direction; they are not a promise that every proposed package or abstraction will ship in v0.
+> **Project status:** early 0.x prototype. The core runtime and a minimal Next.js route-handler adapter are implemented and CI-tested. APIs are not yet stable and packages are not yet published.
 
 ## Core vocabulary
 
@@ -19,7 +19,32 @@ The intended public entry point is `defineOperation()`. The exact API and the bo
 
 ## Repository status
 
-The repository currently contains the design baseline and development workflow. No API or package layout should be treated as stable until the core contracts and a minimal end-to-end example are implemented and tested.
+The repository currently includes:
+
+- `@archeon/core` — operation definitions, modules, application construction, parsing, execution plans, and typed execution context.
+- `@archeon/next` — a thin adapter for Next.js App Router route handlers using standard Web `Request`/`Response` APIs.
+- `examples/basic` — a framework-neutral consumer example.
+- `docs/adr/` and `docs/guides/` — architecture decisions and usage guides.
+
+The public contracts are still being refined. See the [roadmap](docs/roadmap.md) before relying on an API for production.
+
+## Current API shape
+
+```ts
+const app = createApplication({
+  modules: [usersModule],
+  services,
+});
+
+const result = await app.execute("users.create", input, {
+  request: {
+    requestId: "req-123",
+    principal: { id: "user-42" },
+  },
+});
+```
+
+Application services are bound at construction; request context is per invocation and optional. See the [execution-context guide](docs/guides/execution-context.md) and [Next.js adapter guide](docs/guides/next-adapter.md).
 
 ## Development branches
 
