@@ -123,6 +123,10 @@ console.log("Packed-package consumer smoke test passed.");
       throw new Error(`${expectedName} must declare the MIT license`);
     }
 
+    if (manifest.publishConfig?.access !== "public") {
+      throw new Error(`${expectedName} must configure public npm access`);
+    }
+
     const requiredPaths = [
       "package/package.json",
       "package/LICENSE",
