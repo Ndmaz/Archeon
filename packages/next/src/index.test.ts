@@ -84,4 +84,19 @@ describe("@archeon/next", () => {
     const response = await handler(new Request("https://example.test/api/users"));
     expect(response.status).toBe(200);
   });
+
+  it("constrains the adapter to registered operations and the application's request-context type", () => {
+    const app = makeApp();
+    // @ts-expect-error This application has no operation named users.missing.
+    createNextHandler(app, {
+      operation: "users.missing",
+      getInput: () => ({}),
+    });
+    // @ts-expect-error requestId must be a string in this application's RequestContext.
+    createNextHandler(app, {
+      operation: "users.create",
+      getInput: () => ({}),
+      getRequestContext: () => ({ requestId: 42, principal: null }),
+    });
+  });
 });
