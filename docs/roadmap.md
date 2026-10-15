@@ -58,10 +58,13 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 - [x] Add a minimal Next.js App Router example and build it against packed packages in CI.
 - [x] Add package-consumer smoke tests against packed tarballs, not only workspace imports.
 - [x] Audit package exports, generated declarations, and included files in the packed tarballs.
-- [ ] Decide package names, exports, license, and compatibility policy.
+- [x] Confirm package names and export maps.
+- [x] Document the current CI-tested compatibility environment and pre-1.0 release policy.
+- [ ] Select an open-source license and add the corresponding LICENSE file.
 - [x] Inspect required build output and published package contents through tarball assertions.
 - [ ] Publish a version only after the end-to-end example and tests pass.
-- [ ] Create a GitHub release and changelog.
+- [x] Add an initial changelog.
+- [ ] Create a GitHub release after the license and publication decision are finalized.
 
 ## Deferred design questions
 
