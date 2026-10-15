@@ -60,7 +60,7 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 - [x] Audit package exports, generated declarations, and included files in the packed tarballs.
 - [x] Confirm package names and export maps.
 - [x] Document the current CI-tested compatibility environment and pre-1.0 release policy.
-- [ ] Select an open-source license and add the corresponding LICENSE file.
+- [x] Select MIT and include the license in the repository and both package tarballs.
 - [x] Inspect required build output and published package contents through tarball assertions.
 - [ ] Publish a version only after the end-to-end example and tests pass.
 - [x] Add an initial changelog.
