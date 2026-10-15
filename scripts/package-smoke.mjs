@@ -75,7 +75,7 @@ void handler;
 import { createApplication, defineModule, defineOperation } from "@archeon/core";
 import { createNextHandler } from "@archeon/next";
 
-const operation = defineOperation<{}, { requestId: string }>()({
+const operation = defineOperation()({
   name: "smoke.greet",
   input: { parse(value) {
     if (typeof value !== "string") throw new TypeError("Expected string input");
