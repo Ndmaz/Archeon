@@ -99,4 +99,66 @@ describe("@archeon/next", () => {
       getRequestContext: () => ({ requestId: 42, principal: null }),
     });
   });
+
+  it("forwards the resolved request context to the operation invocation", async () => {
+    type Context = { requestId: string; principal: { id: string } | null };
+    const operation = defineOperation<Services, Context>()({
+      name: "context.inspect",
+      execute: ({ context }) => ({
+        requestId: context.request?.requestId,
+        principalId: context.request?.principal?.id ?? null,
+      }),
+    });
+    const app = createApplication({
+      modules: [defineModule({ name: "context", operations: { inspect: operation } })],
+      services,
+    });
+    const handler = createNextHandler(app, {
+      operation: "context.inspect",
+      getInput: () => undefined,
+      getRequestContext: (request) => ({
+        requestId: request.headers.get("x-request-id") ?? "missing",
+        principal: { id: "trusted-user" },
+      }),
+    });
+
+    const response = await handler(new Request("https://example.test/api/context", {
+      headers: { "x-request-id": "req-context-test" },
+    }));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      requestId: "req-context-test",
+      principalId: "trusted-user",
+    });
+  });
+
+  it("supports a caller-selected success status", async () => {
+    const app = makeApp();
+    const handler = createNextHandler(app, {
+      operation: "users.create",
+      getInput: () => ({ email: "created@example.com" }),
+      successStatus: 201,
+    });
+
+    const response = await handler(new Request("https://example.test/api/users", { method: "POST" }));
+    expect(response.status).toBe(201);
+  });
+
+  it("maps request-context resolver failures through the configured error boundary", async () => {
+    const app = makeApp();
+    const failure = new Error("identity provider unavailable");
+    const onError = vi.fn(() => Response.json({ error: "Request failed" }, { status: 503 }));
+    const handler = createNextHandler(app, {
+      operation: "users.create",
+      getInput: () => ({ email: "created@example.com" }),
+      getRequestContext: () => { throw failure; },
+      onError,
+    });
+
+    const response = await handler(new Request("https://example.test/api/users"));
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({ error: "Request failed" });
+    expect(onError).toHaveBeenCalledWith(failure, expect.any(Request));
+  });
 });
