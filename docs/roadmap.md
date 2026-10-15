@@ -38,7 +38,7 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 - [x] Bind application services at construction and use `app.execute(name, input)` (ADR-0014).
 - [x] Define a framework-neutral, per-invocation request context separate from application services (ADR-0015).
 
-- [ ] Implement the typed request-context contract from ADR-0015 with runtime and type tests.
+- [x] Implement the typed request-context contract from ADR-0015 with runtime and type tests.
 - [ ] Add a thin Next.js adapter after request-context implementation is validated.
 - [ ] Prove error and HTTP response mapping.
 - [ ] Add validation/auth integrations only through agreed interfaces.
@@ -48,7 +48,7 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 
 - [ ] Getting-started guide.
 - [ ] Operation/module guide.
-- [ ] Execution-context and service guide.
+- [x] Execution-context and service guide.
 - [ ] Adapter and plugin guides.
 - [x] CI validates type-checking, tests, build, and example types.
 
