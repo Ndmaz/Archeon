@@ -39,8 +39,8 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 - [x] Define a framework-neutral, per-invocation request context separate from application services (ADR-0015).
 
 - [x] Implement the typed request-context contract from ADR-0015 with runtime and type tests.
-- [ ] Add a thin Next.js adapter after request-context implementation is validated.
-- [ ] Prove error and HTTP response mapping.
+- [x] Add a thin Next.js route-handler adapter after request-context implementation is validated.
+- [x] Prove basic success JSON, generic 500 behavior, and custom error mapping in adapter tests.
 - [ ] Add validation/auth integrations only through agreed interfaces.
 - [ ] Evaluate whether React hooks or other client helpers are needed for v0.
 
@@ -49,7 +49,8 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 - [ ] Getting-started guide.
 - [ ] Operation/module guide.
 - [x] Execution-context and service guide.
-- [ ] Adapter and plugin guides.
+- [x] Next.js adapter guide.
+- [ ] Plugin guide.
 - [x] CI validates type-checking, tests, build, and example types.
 
 ## Milestone 5 — First release
