@@ -4,13 +4,14 @@ export interface InputParser<TInput> {
   parse(input: unknown): TInput | Promise<TInput>;
 }
 
-export interface ExecutionContext<TServices> {
+export interface ExecutionContext<TServices, TRequestContext = unknown> {
   readonly services: TServices;
+  readonly request: TRequestContext | undefined;
 }
 
-export interface OperationArguments<TInput, TServices> {
+export interface OperationArguments<TInput, TServices, TRequestContext = unknown> {
   readonly input: TInput;
-  readonly context: ExecutionContext<TServices>;
+  readonly context: ExecutionContext<TServices, TRequestContext>;
 }
 
 export interface OperationDefinition<
@@ -18,11 +19,12 @@ export interface OperationDefinition<
   TInput = unknown,
   TOutput = unknown,
   TName extends string = string,
+  TRequestContext = unknown,
 > {
   readonly name: TName;
   readonly input?: InputParser<TInput>;
   readonly execute: (
-    args: OperationArguments<TInput, TServices>,
+    args: OperationArguments<TInput, TServices, TRequestContext>,
   ) => TOutput | Promise<TOutput>;
 }
 
@@ -31,32 +33,33 @@ type OperationWithParser<
   TInput,
   TOutput,
   TName extends string,
+  TRequestContext,
 > = {
   readonly name: TName;
   readonly input: InputParser<TInput>;
   readonly execute: (
-    args: OperationArguments<TInput, TServices>,
+    args: OperationArguments<TInput, TServices, TRequestContext>,
   ) => TOutput | Promise<TOutput>;
 };
 
-type OperationWithoutParser<TServices, TOutput, TName extends string> = {
+type OperationWithoutParser<TServices, TOutput, TName extends string, TRequestContext> = {
   readonly name: TName;
   readonly execute: (
-    args: OperationArguments<unknown, TServices>,
+    args: OperationArguments<unknown, TServices, TRequestContext>,
   ) => TOutput | Promise<TOutput>;
 };
 
-export interface OperationBuilder<TServices> {
+export interface OperationBuilder<TServices, TRequestContext = unknown> {
   <TInput, TOutput, const TName extends string>(
-    definition: OperationWithParser<TServices, TInput, TOutput, TName>,
-  ): OperationDefinition<TServices, TInput, TOutput, TName>;
+    definition: OperationWithParser<TServices, TInput, TOutput, TName, TRequestContext>,
+  ): OperationDefinition<TServices, TInput, TOutput, TName, TRequestContext>;
   <TOutput, const TName extends string>(
-    definition: OperationWithoutParser<TServices, TOutput, TName>,
-  ): OperationDefinition<TServices, unknown, TOutput, TName>;
+    definition: OperationWithoutParser<TServices, TOutput, TName, TRequestContext>,
+  ): OperationDefinition<TServices, unknown, TOutput, TName, TRequestContext>;
 }
 
-export function defineOperation<TServices>(): OperationBuilder<TServices> {
-  return ((definition: OperationDefinition<TServices, unknown, unknown, string>) => {
+export function defineOperation<TServices, TRequestContext = unknown>(): OperationBuilder<TServices, TRequestContext> {
+  return ((definition: OperationDefinition<TServices, unknown, unknown, string, TRequestContext>) => {
     const name = definition.name;
     if (
       typeof name !== "string" ||
@@ -66,5 +69,5 @@ export function defineOperation<TServices>(): OperationBuilder<TServices> {
     }
 
     return Object.freeze({ ...definition });
-  }) as OperationBuilder<TServices>;
+  }) as OperationBuilder<TServices, TRequestContext>;
 }
