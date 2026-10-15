@@ -104,6 +104,53 @@ console.log("Packed-package consumer smoke test passed.");
 
   const corePath = join(tarballsDir, coreTarball);
   const nextPath = join(tarballsDir, nextTarball);
+
+  function inspectPackageTarball(tarballPath, expectedName) {
+    const files = execFileSync("tar", ["-tzf", tarballPath], { encoding: "utf8" })
+      .trim()
+      .split("\n")
+      .filter(Boolean);
+    const manifestText = execFileSync("tar", ["-xOzf", tarballPath, "package/package.json"], {
+      encoding: "utf8",
+    });
+    const manifest = JSON.parse(manifestText);
+
+    if (manifest.name !== expectedName) {
+      throw new Error(`Expected package ${expectedName}, got ${manifest.name}`);
+    }
+
+    const requiredPaths = [
+      "package/package.json",
+      "package/dist/index.js",
+      "package/dist/index.d.ts",
+    ];
+    for (const requiredPath of requiredPaths) {
+      if (!files.includes(requiredPath)) {
+        throw new Error(`${expectedName} tarball is missing ${requiredPath}`);
+      }
+    }
+
+    const exportRoot = manifest.exports?.["."];
+    for (const [condition, target] of Object.entries(exportRoot ?? {})) {
+      if (typeof target !== "string") {
+        throw new Error(`${expectedName} export condition "${condition}" must point to a file`);
+      }
+      if (!files.includes(`package/${target.replace(/^\.\//, "")}`)) {
+        throw new Error(`${expectedName} export "${condition}" points to missing file: ${target}`);
+      }
+    }
+
+    for (const [dependency, version] of Object.entries(manifest.dependencies ?? {})) {
+      if (typeof version === "string" && version.startsWith("workspace:")) {
+        throw new Error(`${expectedName} contains unpublished workspace dependency ${dependency}: ${version}`);
+      }
+    }
+
+    console.log(`Package manifest and tarball contents verified: ${expectedName}@${manifest.version}`);
+  }
+
+  inspectPackageTarball(corePath, "@archeon/core");
+  inspectPackageTarball(nextPath, "@archeon/next");
   run("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", "--prefix", consumerDir,
     corePath, nextPath, "typescript@^5.9.3"]);
   run("npm", ["run", "typecheck", "--prefix", consumerDir]);
