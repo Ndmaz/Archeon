@@ -19,6 +19,8 @@ This describes the environment exercised by CI; it is not a promise that every v
 - Breaking API changes may occur in 0.x releases.
 - Each published release should include a changelog entry and a GitHub release.
 - Do not publish until the packed-package consumer test and Next.js example build pass.
+- Both scoped packages declare `publishConfig.access: public`; CI verifies this metadata in the tarballs.
+- Publish `@archeon/core` before `@archeon/next`, because the adapter depends on the core package. Verify the published core version satisfies the adapter dependency before publishing the adapter.
 - Keep runtime dependencies minimal and avoid introducing framework dependencies into @archeon/core.
 
 ## License
