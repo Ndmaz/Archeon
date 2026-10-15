@@ -43,3 +43,6 @@ jobs:
 
       - name: Typecheck basic example
         run: pnpm --filter @archeon/example-basic typecheck
+
+      - name: Test packed packages from an external consumer
+        run: node scripts/package-smoke.mjs
