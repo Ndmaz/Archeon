@@ -36,8 +36,10 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 ## Milestone 3 — Adapter and integration proof
 
 - [x] Bind application services at construction and use `app.execute(name, input)` (ADR-0014).
+- [x] Define a framework-neutral, per-invocation request context separate from application services (ADR-0015).
 
-- [ ] Add a thin Next.js adapter after request-scope context is designed.
+- [ ] Implement the typed request-context contract from ADR-0015 with runtime and type tests.
+- [ ] Add a thin Next.js adapter after request-context implementation is validated.
 - [ ] Prove error and HTTP response mapping.
 - [ ] Add validation/auth integrations only through agreed interfaces.
 - [ ] Evaluate whether React hooks or other client helpers are needed for v0.
