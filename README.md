@@ -24,9 +24,10 @@ The repository currently includes:
 - `@archeon/core` — operation definitions, modules, application construction, parsing, execution plans, and typed execution context.
 - `@archeon/next` — a thin adapter for Next.js App Router route handlers using standard Web `Request`/`Response` APIs.
 - `examples/basic` — a framework-neutral consumer example.
+- `examples/next-app` — a minimal Next.js App Router app; CI builds it against the packed package tarballs.
 - `docs/adr/` and `docs/guides/` — architecture decisions and usage guides.
 
-The public contracts are still being refined. See the [roadmap](docs/roadmap.md) before relying on an API for production.
+The public contracts are still being refined. See the [roadmap](docs/roadmap.md) before relying on an API for production. For the Next.js integration, start with the [example app](examples/next-app/README.md).
 
 ## Current API shape
 
