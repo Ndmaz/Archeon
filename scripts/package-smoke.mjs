@@ -119,8 +119,13 @@ console.log("Packed-package consumer smoke test passed.");
       throw new Error(`Expected package ${expectedName}, got ${manifest.name}`);
     }
 
+    if (manifest.license !== "MIT") {
+      throw new Error(`${expectedName} must declare the MIT license`);
+    }
+
     const requiredPaths = [
       "package/package.json",
+      "package/LICENSE",
       "package/dist/index.js",
       "package/dist/index.d.ts",
     ];
