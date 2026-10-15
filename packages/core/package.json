@@ -32,5 +32,8 @@
   "homepage": "https://github.com/Ndmaz/Archeon#readme",
   "bugs": {
     "url": "https://github.com/Ndmaz/Archeon/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
