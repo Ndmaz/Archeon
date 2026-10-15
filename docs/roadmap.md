@@ -46,12 +46,30 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 
 ## Milestone 4 — Documentation and quality
 
-- [ ] Getting-started guide.
-- [ ] Operation/module guide.
+- [x] Getting-started guide.
+- [x] Operation/module guide.
 - [x] Execution-context and service guide.
 - [x] Next.js adapter guide.
-- [ ] Plugin guide.
+- [ ] Plugin guide (deferred until the plugin contract is justified by a concrete integration).
 - [x] CI validates type-checking, tests, build, and example types.
+
+## Milestone 5 — Package and release readiness
+
+- [ ] Add a minimal runnable example for the Next.js adapter or verify the existing example covers it.
+- [ ] Add package-consumer smoke tests against packed tarballs, not only workspace imports.
+- [ ] Review package exports, generated declarations, and included files.
+- [ ] Decide package names, exports, license, and compatibility policy.
+- [ ] Inspect build output and published package contents.
+- [ ] Publish a version only after the end-to-end example and tests pass.
+- [ ] Create a GitHub release and changelog.
+
+## Deferred design questions
+
+- [ ] Define the minimum stable application/domain error convention before offering built-in HTTP error mapping.
+- [ ] Decide whether services across modules should be intersected or whether one explicit application-level service type should be declared; add a test for overlapping incompatible service properties.
+- [ ] Decide whether operation-name grammar should allow a hyphen after a dot segment (for example `users.create-user`) and encode the chosen grammar in the ADR/tests.
+
+## Legacy release checklist (superseded by the readiness milestone above)
 
 ## Milestone 5 — First release
 
