@@ -2,6 +2,8 @@
 
 **An operation runtime for TypeScript applications.**
 
+Archeon is licensed under the [MIT License](LICENSE).
+
 Archeon provides a typed, operation-first model for defining application capabilities, compiling their definitions into execution plans, and running them through a framework-neutral core.
 
 > **Project status:** early 0.x prototype. The core runtime and a minimal Next.js route-handler adapter are implemented and CI-tested. APIs are not yet stable and packages are not yet published.
