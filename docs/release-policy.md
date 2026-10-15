@@ -23,4 +23,4 @@ This describes the environment exercised by CI; it is not a promise that every v
 
 ## License
 
-Archeon is licensed under the MIT License. The repository root `LICENSE` file contains the license text. Keep this license metadata consistent across both published packages and the repository documentation.
+Archeon is licensed under the MIT License. The repository root `LICENSE` file contains the license text, and both package directories include a copy so the license is present in each packed tarball. Both package manifests declare `"license": "MIT"`; CI checks the metadata and included license file. Keep this consistent across the repository and published artifacts.
