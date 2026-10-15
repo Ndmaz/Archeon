@@ -61,7 +61,7 @@ const greet = defineOperation<Services, RequestContext>()({
 });
 const app = createApplication({
   modules: [defineModule({ name: "greetings", operations: { greet } })],
-  services: { greeting: { say: (name) => \`hello \${name}\` } },
+  services: { greeting: { say: (name: string) => \`hello \${name}\` } },
 });
 const handler = createNextHandler(app, {
   operation: "greetings.say",
