@@ -15,7 +15,7 @@ Archeon provides a typed, operation-first model for defining application capabil
 - **Plugin** — extends the framework through explicit integration points.
 - **Adapter** — connects Archeon to an environment such as Next.js or React.
 
-The intended public entry point is `defineOperation()`. The exact API and the boundary between operation definitions, plans, and runtime execution will be refined through documented architecture decisions before implementation.
+The public entry point is `defineOperation()`. The current v0 contract is documented in the accepted ADRs and implemented in `@archeon/core`; it remains pre-release and may change before 1.0.
 
 ## Repository status
 
