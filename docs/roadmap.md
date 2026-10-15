@@ -67,16 +67,7 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 
 - [ ] Define the minimum stable application/domain error convention before offering built-in HTTP error mapping.
 - [ ] Decide whether services across modules should be intersected or whether one explicit application-level service type should be declared; add a test for overlapping incompatible service properties.
-- [ ] Decide whether operation-name grammar should allow a hyphen after a dot segment (for example `users.create-user`) and encode the chosen grammar in the ADR/tests.
-
-## Legacy release checklist (superseded by the readiness milestone above)
-
-## Milestone 5 — First release
-
-- [ ] Decide package names, exports, license, and compatibility policy.
-- [ ] Inspect build output and published package contents.
-- [ ] Publish a version only after the end-to-end example and tests pass.
-- [ ] Create a GitHub release and changelog.
+- [ ] Confirm the operation-name grammar in ADRs, especially names such as `users.create-user`.
 
 ## Post-v0 possibilities (not commitments)
 
