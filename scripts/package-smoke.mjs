@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, readdirSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readdirSync, rmSync, cpSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -155,6 +155,21 @@ console.log("Packed-package consumer smoke test passed.");
     corePath, nextPath, "typescript@^5.9.3"]);
   run("npm", ["run", "typecheck", "--prefix", consumerDir]);
   run("npm", ["test", "--prefix", consumerDir]);
+
+  // Build a real Next.js App Router project against the exact package tarballs
+  // produced above, rather than workspace aliases or registry releases.
+  const nextAppDir = join(temp, "next-app");
+  cpSync(join(root, "examples/next-app"), nextAppDir, { recursive: true });
+  const nextAppPackagePath = join(nextAppDir, "package.json");
+  const nextAppPackage = JSON.parse(readFileSync(nextAppPackagePath, "utf8"));
+  nextAppPackage.dependencies["@archeon/core"] = `file:${corePath}`;
+  nextAppPackage.dependencies["@archeon/next"] = `file:${nextPath}`;
+  writeFileSync(nextAppPackagePath, JSON.stringify(nextAppPackage, null, 2) + "\n");
+
+  run("npm", ["install", "--no-audit", "--no-fund", "--prefix", nextAppDir]);
+  run("npm", ["run", "typecheck", "--prefix", nextAppDir]);
+  run("npm", ["run", "build", "--prefix", nextAppDir]);
+  console.log("Packed-package Next.js App Router build passed.");
 } finally {
   rmSync(temp, { recursive: true, force: true });
 }
