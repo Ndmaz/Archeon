@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, testing, main]
+  pull_request:
+    branches: [dev, testing, main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Typecheck, test, and build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build core and adapter
+        run: pnpm build
+
+      - name: Typecheck core, adapter, and tests
+        run: pnpm typecheck
+
+      - name: Run core and adapter tests
+        run: pnpm test
+
+      - name: Typecheck basic example
+        run: pnpm --filter @archeon/example-basic typecheck
+
+      - name: Test packed packages from an external consumer
+        run: pnpm test:packages

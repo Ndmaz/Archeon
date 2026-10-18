@@ -1,0 +1,21 @@
+{
+  "name": "archeon",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.18.3",
+  "scripts": {
+    "build": "pnpm --filter @archeon/core build && pnpm --filter @archeon/next build",
+    "typecheck": "pnpm --filter @archeon/core typecheck && pnpm --filter @archeon/next typecheck",
+    "test": "pnpm --filter @archeon/core test && pnpm --filter @archeon/next test",
+    "test:packages": "node scripts/package-smoke.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
