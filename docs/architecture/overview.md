@@ -60,13 +60,13 @@ HTTP / framework request
 - **Integrations:** use explicit contracts or application-provided services; do not make specific third-party tools core dependencies.
 - **Client integrations:** optional; React hooks and query-library integration are not required for the first vertical slice.
 
-## Still to specify before implementation hardens
+## Remaining questions before a stable release
 
-- Exact TypeScript inference and parser contract.
-- Framework-level errors and parser-failure semantics.
-- Minimum module/application builder API.
-- Minimum package layout and exports.
-- Whether the first vertical slice needs any plugin contract at all.
+- Define a minimal, stable application/domain error convention before providing built-in HTTP error mapping.
+- Validate package exports, declaration output, and packed-package consumption rather than relying only on workspace imports.
+- Decide whether application services should be inferred as the intersection of module requirements or declared once at the application boundary, especially when modules declare overlapping incompatible service properties.
+- Review the operation-name grammar and preserve its tests as part of the public contract.
+- Add integrations only when a concrete use case justifies their API; a plugin contract is not a prerequisite for v0.
 
 ## Design principle
 

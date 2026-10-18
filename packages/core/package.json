@@ -1,6 +1,6 @@
 {
   "name": "@archeon/core",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Framework-neutral operation runtime for TypeScript applications",
   "type": "module",
   "main": "./dist/index.js",
@@ -22,5 +22,18 @@
   "devDependencies": {
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ndmaz/Archeon.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/Ndmaz/Archeon#readme",
+  "bugs": {
+    "url": "https://github.com/Ndmaz/Archeon/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

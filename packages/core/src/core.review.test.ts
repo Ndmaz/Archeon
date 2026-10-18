@@ -280,4 +280,61 @@ describe("Archeon core review regressions", () => {
       services,
     })).toThrow(InvalidModuleDefinitionError);
   });
+
+  it("passes a typed request context to the matching invocation only", async () => {
+    type RequestContext = {
+      requestId: string;
+      principal: { id: string } | null;
+    };
+    const seen: RequestContext[] = [];
+    const operation = defineOperation<Services, RequestContext>()({
+      name: "users.request-context",
+      execute: ({ context }) => {
+        // Compile-time contract: the request shape is inferred from defineOperation.
+        const requestId: string = context.request!.requestId;
+        expect(requestId).toMatch(/^req-/);
+        seen.push(context.request!);
+        return context.services.users.count();
+      },
+    });
+    const app = createApplication({
+      modules: [defineModule({ name: "users", operations: { requestContext: operation } })],
+      services,
+    });
+
+    await Promise.all([
+      app.execute("users.request-context", undefined, {
+        request: { requestId: "req-one", principal: { id: "u-one" } },
+      }),
+      app.execute("users.request-context", undefined, {
+        request: { requestId: "req-two", principal: null },
+      }),
+    ]);
+
+    expect(seen).toEqual([
+      { requestId: "req-one", principal: { id: "u-one" } },
+      { requestId: "req-two", principal: null },
+    ]);
+    expect(seen[0]).not.toBe(seen[1]);
+  });
+
+  it("allows request context to be omitted and rejects incompatible request context types", async () => {
+    type RequestContext = { requestId: string };
+    const operation = defineOperation<Services, RequestContext>()({
+      name: "users.optional-request",
+      execute: ({ context }) => context.request?.requestId ?? "no-request",
+    });
+    const app = createApplication({
+      modules: [defineModule({ name: "users", operations: { optionalRequest: operation } })],
+      services,
+    });
+
+    await expect(app.execute("users.optional-request", undefined)).resolves.toBe("no-request");
+    await expect(app.execute("users.optional-request", undefined, {
+      request: { requestId: "req-ok" },
+    })).resolves.toBe("req-ok");
+
+    // @ts-expect-error requestId must be a string.
+    app.execute("users.optional-request", undefined, { request: { requestId: 42 } });
+  });
 });

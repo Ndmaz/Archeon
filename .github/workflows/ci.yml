@@ -32,14 +32,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck core
+      - name: Build core and adapter
+        run: pnpm build
+
+      - name: Typecheck core, adapter, and tests
         run: pnpm typecheck
 
-      - name: Run core tests
+      - name: Run core and adapter tests
         run: pnpm test
-
-      - name: Build core
-        run: pnpm build
 
       - name: Typecheck basic example
         run: pnpm --filter @archeon/example-basic typecheck
+
+      - name: Test packed packages from an external consumer
+        run: pnpm test:packages

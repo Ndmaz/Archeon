@@ -36,26 +36,41 @@ Roadmap status is intentionally conservative. A checkbox is complete only when t
 ## Milestone 3 — Adapter and integration proof
 
 - [x] Bind application services at construction and use `app.execute(name, input)` (ADR-0014).
+- [x] Define a framework-neutral, per-invocation request context separate from application services (ADR-0015).
 
-- [ ] Add a thin Next.js adapter after request-scope context is designed.
-- [ ] Prove error and HTTP response mapping.
+- [x] Implement the typed request-context contract from ADR-0015 with runtime and type tests.
+- [x] Add a thin Next.js route-handler adapter after request-context implementation is validated.
+- [x] Prove basic success JSON, generic 500 behavior, and custom error mapping in adapter tests.
 - [ ] Add validation/auth integrations only through agreed interfaces.
 - [ ] Evaluate whether React hooks or other client helpers are needed for v0.
 
 ## Milestone 4 — Documentation and quality
 
-- [ ] Getting-started guide.
-- [ ] Operation/module guide.
-- [ ] Execution-context and service guide.
-- [ ] Adapter and plugin guides.
+- [x] Getting-started guide.
+- [x] Operation/module guide.
+- [x] Execution-context and service guide.
+- [x] Next.js adapter guide.
+- [ ] Plugin guide (deferred until the plugin contract is justified by a concrete integration).
 - [x] CI validates type-checking, tests, build, and example types.
 
-## Milestone 5 — First release
+## Milestone 5 — Package and release readiness
 
-- [ ] Decide package names, exports, license, and compatibility policy.
-- [ ] Inspect build output and published package contents.
+- [x] Add a minimal Next.js App Router example and build it against packed packages in CI.
+- [x] Add package-consumer smoke tests against packed tarballs, not only workspace imports.
+- [x] Audit package exports, generated declarations, and included files in the packed tarballs.
+- [x] Confirm package names and export maps.
+- [x] Document the current CI-tested compatibility environment and pre-1.0 release policy.
+- [x] Select MIT and include the license in the repository and both package tarballs.
+- [x] Inspect required build output and published package contents through tarball assertions.
 - [ ] Publish a version only after the end-to-end example and tests pass.
-- [ ] Create a GitHub release and changelog.
+- [x] Add an initial changelog.
+- [ ] Create a GitHub release after the license and publication decision are finalized.
+
+## Deferred design questions
+
+- [ ] Define the minimum stable application/domain error convention before offering built-in HTTP error mapping.
+- [ ] Decide whether services across modules should be intersected or whether one explicit application-level service type should be declared; add a test for overlapping incompatible service properties.
+- [ ] Confirm the operation-name grammar in ADRs, especially names such as `users.create-user`.
 
 ## Post-v0 possibilities (not commitments)
 

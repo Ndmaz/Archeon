@@ -1,0 +1,38 @@
+{
+  "name": "@archeon/next",
+  "version": "0.1.0",
+  "description": "Next.js route-handler adapter for Archeon applications",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@archeon/core": "workspace:*"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ndmaz/Archeon.git",
+    "directory": "packages/next"
+  },
+  "homepage": "https://github.com/Ndmaz/Archeon#readme",
+  "bugs": {
+    "url": "https://github.com/Ndmaz/Archeon/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

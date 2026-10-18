@@ -4,9 +4,10 @@
   "version": "0.0.0",
   "packageManager": "pnpm@10.18.3",
   "scripts": {
-    "build": "pnpm --filter @archeon/core build",
-    "typecheck": "pnpm --filter @archeon/core typecheck",
-    "test": "pnpm --filter @archeon/core test"
+    "build": "pnpm --filter @archeon/core build && pnpm --filter @archeon/next build",
+    "typecheck": "pnpm --filter @archeon/core typecheck && pnpm --filter @archeon/next typecheck",
+    "test": "pnpm --filter @archeon/core test && pnpm --filter @archeon/next test",
+    "test:packages": "node scripts/package-smoke.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

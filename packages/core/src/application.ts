@@ -8,7 +8,7 @@ import {
   UnknownOperationError,
 } from "./errors.js";
 
-type AnyOperation = OperationDefinition<any, any, any>;
+type AnyOperation = OperationDefinition<any, any, any, any, any>;
 type AnyModule = ModuleDefinition<any, Record<string, AnyOperation>>;
 type ServicesOfModule<TModule> =
   TModule extends ModuleDefinition<infer TServices, any> ? TServices : never;
@@ -25,6 +25,12 @@ type OperationsOf<TModule> =
 
 type OperationsOfModules<TModules extends readonly AnyModule[]> =
   OperationsOf<TModules[number]>;
+type RequestContextOf<TOperation> =
+  TOperation extends OperationDefinition<any, any, any, any, infer TRequestContext>
+    ? TRequestContext
+    : never;
+type RequestContextRequiredByModules<TModules extends readonly AnyModule[]> =
+  UnionToIntersection<RequestContextOf<OperationsOfModules<TModules>>>;
 
 type OperationName<TModules extends readonly AnyModule[]> =
   OperationsOfModules<TModules> extends infer TOperation
@@ -46,7 +52,7 @@ type OutputForName<
 
 export interface ExecutionPlan {
   readonly operationName: string;
-  readonly invoke: (input: unknown, services: unknown) => Promise<unknown>;
+  readonly invoke: (input: unknown, services: unknown, request: unknown) => Promise<unknown>;
 }
 
 export interface ApplicationOptions<TModules extends readonly AnyModule[]> {
@@ -57,12 +63,14 @@ export interface ApplicationOptions<TModules extends readonly AnyModule[]> {
 export interface ArcheonApplication<
   TServices,
   TModules extends readonly AnyModule[],
+  TRequestContext = unknown,
 > {
   readonly modules: readonly string[];
   readonly operationNames: readonly OperationName<TModules>[];
   execute<TName extends OperationName<TModules>>(
     operationName: TName,
     input: unknown,
+    execution?: { readonly request?: TRequestContext },
   ): Promise<Awaited<OutputForName<TModules, TName>>>;
 }
 
@@ -72,7 +80,11 @@ export function createApplication<
   const TModules extends readonly AnyModule[],
 >(
   options: ApplicationOptions<TModules>,
-): ArcheonApplication<ServicesRequiredByModules<TModules>, TModules> {
+): ArcheonApplication<
+  ServicesRequiredByModules<TModules>,
+  TModules,
+  RequestContextRequiredByModules<TModules>
+> {
   const moduleNames = new Set<string>();
   const plans = new Map<string, ExecutionPlan>();
 
@@ -115,13 +127,16 @@ export function createApplication<
 
       const plan: ExecutionPlan = Object.freeze({
         operationName: operation.name,
-        invoke: async (input: unknown, services: unknown): Promise<unknown> => {
+        invoke: async (input: unknown, services: unknown, request: unknown): Promise<unknown> => {
           const parsedInput = operation.input
             ? await operation.input.parse(input)
             : input;
           return await operation.execute({
             input: parsedInput,
-            context: Object.freeze({ services: services as ServicesRequiredByModules<TModules> }),
+            context: Object.freeze({
+              services: services as ServicesRequiredByModules<TModules>,
+              request,
+            }),
           });
         },
       });
@@ -138,10 +153,11 @@ export function createApplication<
     async execute<TName extends OperationName<TModules>>(
       operationName: TName,
       input: unknown,
+      execution?: { readonly request?: RequestContextRequiredByModules<TModules> },
     ): Promise<Awaited<OutputForName<TModules, TName>>> {
       const plan = plans.get(operationName);
       if (!plan) throw new UnknownOperationError(operationName);
-      return (await plan.invoke(input, options.services)) as Awaited<OutputForName<TModules, TName>>;
+      return (await plan.invoke(input, options.services, execution?.request)) as Awaited<OutputForName<TModules, TName>>;
     },
   });
 }
