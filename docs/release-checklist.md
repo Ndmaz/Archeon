@@ -4,8 +4,9 @@ Use this checklist for the first public release. Do not publish directly from a 
 
 ## Before release
 
-- [ ] Confirm the release version and update both package versions consistently.
-- [ ] Update `CHANGELOG.md` with the release date and user-facing changes.
+- [x] Set both package versions to `0.1.0` for the release candidate.
+- [ ] Confirm the final release version remains `0.1.0` after reviewing CI and package artifacts.
+- [x] Prepare the `0.1.0` release-candidate changelog entry; add the actual release date and final notes before publication.
 - [ ] Confirm the root MIT license and both package-level license copies are present.
 - [ ] Confirm both package manifests declare `license: MIT`, repository metadata, and `publishConfig.access: public`.
 - [ ] Confirm `@archeon/next` depends on the exact released `@archeon/core` version.
