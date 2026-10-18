@@ -156,10 +156,18 @@ console.log("Packed-package consumer smoke test passed.");
     }
 
     console.log(`Package manifest and tarball contents verified: ${expectedName}@${manifest.version}`);
+    return manifest;
   }
 
-  inspectPackageTarball(corePath, "@archeon/core");
-  inspectPackageTarball(nextPath, "@archeon/next");
+  const coreManifest = inspectPackageTarball(corePath, "@archeon/core");
+  const nextManifest = inspectPackageTarball(nextPath, "@archeon/next");
+  if (nextManifest.dependencies?.["@archeon/core"] !== coreManifest.version) {
+    throw new Error(
+      `@archeon/next depends on @archeon/core@${nextManifest.dependencies?.["@archeon/core"]}, ` +
+      `but the packed core package version is ${coreManifest.version}`,
+    );
+  }
+  console.log(`Cross-package dependency verified: @archeon/next -> @archeon/core@${coreManifest.version}`);
   run("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", "--prefix", consumerDir,
     corePath, nextPath, "typescript@^5.9.3"]);
   run("npm", ["run", "typecheck", "--prefix", consumerDir]);
