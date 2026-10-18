@@ -1,6 +1,6 @@
 {
   "name": "@archeon/core",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Framework-neutral operation runtime for TypeScript applications",
   "type": "module",
   "main": "./dist/index.js",
