@@ -4,7 +4,9 @@ All notable changes to Archeon will be documented here.
 
 This project is pre-release software. Until a stable 1.0.0 release, public APIs may change between 0.x versions.
 
-## Unreleased
+## 0.1.0 — Release candidate (unpublished)
+
+Initial release candidate prepared for validation. This version has not been published to npm.
 
 ### Added
 - Framework-neutral operation definitions, modules, application construction, and execution plans.
