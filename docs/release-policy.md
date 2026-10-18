@@ -2,7 +2,7 @@
 
 ## Current status
 
-Archeon is pre-release 0.x software. The current package manifests use version 0.0.1, but the packages have not been published. Do not treat the current API as stable.
+Archeon is pre-release 0.x software. Both package manifests currently target version 0.1.0 as an unpublished release candidate. Do not treat the current API as stable, and do not assume the packages are available on npm until publication is explicitly completed.
 
 ## Compatibility currently exercised in CI
 
@@ -13,6 +13,8 @@ Archeon is pre-release 0.x software. The current package manifests use version 0
 - Package-consumer validation installs generated tarballs into a temporary project and checks declarations, exports, runtime execution, and a production Next.js build.
 
 This describes the environment exercised by CI; it is not a promise that every version in these major ranges is supported.
+
+The `@archeon/next` workspace manifest uses `workspace:*` for local development. The release smoke test must confirm pnpm rewrites that dependency to the exact core package version in the packed tarball before publication.
 
 ## Pre-1.0 versioning
 
