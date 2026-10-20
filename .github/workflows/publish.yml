@@ -56,7 +56,7 @@ jobs:
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           const expected = process.env.RELEASE_VERSION;
-          if (!/^0\\.\\d+\\.\\d+$/.test(expected)) {
+          if (!/^0\.\d+\.\d+$/.test(expected)) {
             throw new Error(`Expected a 0.x.y release version, received: ${expected}`);
           }
           for (const path of ['packages/core/package.json', 'packages/next/package.json']) {
