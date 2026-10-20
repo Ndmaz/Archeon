@@ -56,8 +56,8 @@ jobs:
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           const expected = process.env.RELEASE_VERSION;
-          if (!/^0\.\d+\.\d+$/.test(expected)) {
-            throw new Error(`Expected a 0.x.y pre-release version, received: ${expected}`);
+          if (!/^0\\.\\d+\\.\\d+$/.test(expected)) {
+            throw new Error(`Expected a 0.x.y release version, received: ${expected}`);
           }
           for (const path of ['packages/core/package.json', 'packages/next/package.json']) {
             const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
@@ -85,13 +85,43 @@ jobs:
           pnpm --filter @archeon/example-basic typecheck
           pnpm test:packages
 
+      # Publishing is retry-safe: if core succeeds but the adapter publish fails,
+      # rerunning the workflow skips the already-published core version.
+      - name: Check whether core version is already published
+        id: core-version
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if npm view "@archeon/core@$RELEASE_VERSION" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "@archeon/core@$RELEASE_VERSION already exists; publication will be skipped."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publish core first
+        if: steps.core-version.outputs.exists != 'true'
         working-directory: packages/core
         run: pnpm publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Check whether adapter version is already published
+        id: next-version
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if npm view "@archeon/next@$RELEASE_VERSION" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "@archeon/next@$RELEASE_VERSION already exists; publication will be skipped."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publish Next.js adapter second
+        if: steps.next-version.outputs.exists != 'true'
         working-directory: packages/next
         run: pnpm publish --access public --no-git-checks
         env:
