@@ -1,0 +1,128 @@
+name: Publish packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (must match both package.json files)"
+        required: true
+        default: "0.1.0"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-archeon-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Validate and publish packages
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+          run_install: false
+
+      - name: Set up Node.js and npm authentication
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      - name: Require npm publishing token
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::error::Configure the NPM_TOKEN repository secret before publishing."
+            exit 1
+          fi
+
+      - name: Verify release version
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const expected = process.env.RELEASE_VERSION;
+          if (!/^0\.\d+\.\d+$/.test(expected)) {
+            throw new Error(`Expected a 0.x.y release version, received: ${expected}`);
+          }
+          for (const path of ['packages/core/package.json', 'packages/next/package.json']) {
+            const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
+            if (pkg.version !== expected) {
+              throw new Error(`${path} has version ${pkg.version}; expected ${expected}`);
+            }
+            if (pkg.license !== 'MIT' || pkg.publishConfig?.access !== 'public') {
+              throw new Error(`${path} is missing MIT/public npm publication metadata`);
+            }
+          }
+          const next = JSON.parse(fs.readFileSync('packages/next/package.json', 'utf8'));
+          if (next.dependencies?.['@archeon/core'] !== 'workspace:*') {
+            throw new Error('Expected the workspace dependency to be workspace:* before pnpm publish rewrites it.');
+          }
+          NODE
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run release validation
+        run: |
+          pnpm build
+          pnpm typecheck
+          pnpm test
+          pnpm --filter @archeon/example-basic typecheck
+          pnpm test:packages
+
+      # Publishing is retry-safe: if core succeeds but the adapter publish fails,
+      # rerunning the workflow skips the already-published core version.
+      - name: Check whether core version is already published
+        id: core-version
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if npm view "@archeon/core@$RELEASE_VERSION" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "@archeon/core@$RELEASE_VERSION already exists; publication will be skipped."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish core first
+        if: steps.core-version.outputs.exists != 'true'
+        working-directory: packages/core
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Check whether adapter version is already published
+        id: next-version
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if npm view "@archeon/next@$RELEASE_VERSION" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "@archeon/next@$RELEASE_VERSION already exists; publication will be skipped."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish Next.js adapter second
+        if: steps.next-version.outputs.exists != 'true'
+        working-directory: packages/next
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
