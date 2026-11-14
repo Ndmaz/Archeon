@@ -10,8 +10,13 @@ import {
 
 type AnyOperation = OperationDefinition<any, any, any, any, any>;
 type AnyModule = ModuleDefinition<any, Record<string, AnyOperation>>;
+// Derive requirements from operation definitions so copied/spread modules retain them.
 type ServicesOfModule<TModule> =
-  TModule extends ModuleDefinition<infer TServices, any> ? TServices : never;
+  OperationsOf<TModule> extends infer TOperation
+    ? TOperation extends OperationDefinition<infer TServices, any, any, any, any>
+      ? TServices
+      : never
+    : never;
 type UnionToIntersection<T> =
   (T extends unknown ? (value: T) => void : never) extends
     (value: infer TIntersection) => void ? TIntersection : never;
