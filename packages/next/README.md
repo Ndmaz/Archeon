@@ -41,7 +41,7 @@ The application must already register the `greetings.say` operation. The example
 - `getInput`: explicit mapping from the request to operation input.
 - `getRequestContext`: optional mapping to the application's request-context type.
 - `onError`: optional transport-boundary error mapper. Without one, errors produce a generic JSON 500.
-- `successStatus`: optional successful response status; defaults to 200.
+- `successStatus`: optional successful response status; defaults to 200, or to 204 with an empty body when the operation returns `undefined`.
 
 The adapter does not authenticate or authorize requests, infer request payloads, generate routes, or install validation, database, rate-limit, or middleware integrations automatically. Implement those policies in your application or through separate integrations.
 
