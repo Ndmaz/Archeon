@@ -10,8 +10,13 @@ import {
 
 type AnyOperation = OperationDefinition<any, any, any, any, any>;
 type AnyModule = ModuleDefinition<any, Record<string, AnyOperation>>;
+// Derive requirements from the operations themselves so copies/spreads retain them.
 type ServicesOfModule<TModule> =
-  TModule extends ModuleDefinition<infer TServices, any> ? TServices : never;
+  OperationsOf<TModule> extends infer TOperation
+    ? TOperation extends OperationDefinition<infer TServices, any, any, any, any>
+      ? TServices
+      : never
+    : never;
 type UnionToIntersection<T> =
   (T extends unknown ? (value: T) => void : never) extends
     (value: infer TIntersection) => void ? TIntersection : never;
@@ -87,6 +92,9 @@ export function createApplication<
 > {
   const moduleNames = new Set<string>();
   const plans = new Map<string, ExecutionPlan>();
+  // Capture application-scoped services once; later mutation of the options
+  // object must not change the dependencies used by an existing application.
+  const services = options.services;
 
   if (!Array.isArray(options.modules)) {
     throw new InvalidModuleDefinitionError("Application modules must be an array.");
@@ -157,7 +165,7 @@ export function createApplication<
     ): Promise<Awaited<OutputForName<TModules, TName>>> {
       const plan = plans.get(operationName);
       if (!plan) throw new UnknownOperationError(operationName);
-      return (await plan.invoke(input, options.services, execution?.request)) as Awaited<OutputForName<TModules, TName>>;
+      return (await plan.invoke(input, services, execution?.request)) as Awaited<OutputForName<TModules, TName>>;
     },
   });
 }
