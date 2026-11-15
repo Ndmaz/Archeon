@@ -61,8 +61,8 @@ jobs:
           }
 
           const expectedPackages = [
-            ['packages/core/package.json', '@archeon/core'],
-            ['packages/next/package.json', '@archeon/next'],
+            ['packages/core/package.json', '@archeon-ts/core'],
+            ['packages/next/package.json', '@archeon-ts/next'],
           ];
 
           for (const [path, expectedName] of expectedPackages) {
@@ -82,8 +82,8 @@ jobs:
           }
 
           const next = JSON.parse(fs.readFileSync('packages/next/package.json', 'utf8'));
-          if (next.dependencies?.['@archeon/core'] !== 'workspace:*') {
-            throw new Error('Expected @archeon/next to depend on @archeon/core through workspace:*.');
+          if (next.dependencies?.['@archeon-ts/core'] !== 'workspace:*') {
+            throw new Error('Expected @archeon-ts/next to depend on @archeon-ts/core through workspace:*.');
           }
           NODE
 
@@ -95,7 +95,7 @@ jobs:
           pnpm build
           pnpm typecheck
           pnpm test
-          pnpm --filter @archeon/example-basic typecheck
+          pnpm --filter @archeon-ts/example-basic typecheck
           pnpm test:packages
 
       # npm view is intentionally unauthenticated: both packages are public.
@@ -106,9 +106,9 @@ jobs:
         env:
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
-          if npm view "@archeon/core@$RELEASE_VERSION" version >/dev/null 2>&1; then
+          if npm view "@archeon-ts/core@$RELEASE_VERSION" version >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "@archeon/core@$RELEASE_VERSION already exists; publication will be skipped."
+            echo "@archeon-ts/core@$RELEASE_VERSION already exists; publication will be skipped."
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
@@ -132,9 +132,9 @@ jobs:
         env:
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
-          if npm view "@archeon/next@$RELEASE_VERSION" version >/dev/null 2>&1; then
+          if npm view "@archeon-ts/next@$RELEASE_VERSION" version >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "@archeon/next@$RELEASE_VERSION already exists; publication will be skipped."
+            echo "@archeon-ts/next@$RELEASE_VERSION already exists; publication will be skipped."
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
@@ -151,11 +151,11 @@ jobs:
             import fs from "node:fs";
             const pkg = JSON.parse(fs.readFileSync(0, "utf8"));
             const expected = process.env.RELEASE_VERSION;
-            if (pkg.name !== "@archeon/next" || pkg.version !== expected) {
+            if (pkg.name !== "@archeon-ts/next" || pkg.version !== expected) {
               throw new Error("Packed adapter name/version does not match the requested release.");
             }
-            if (pkg.dependencies?.["@archeon/core"] !== expected) {
-              throw new Error("Packed adapter must depend on the matching published @archeon/core version.");
+            if (pkg.dependencies?.["@archeon-ts/core"] !== expected) {
+              throw new Error("Packed adapter must depend on the matching published @archeon-ts/core version.");
             }
           '
         env:

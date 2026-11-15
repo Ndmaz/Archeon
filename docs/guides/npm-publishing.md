@@ -2,14 +2,14 @@
 
 Archeon publishes two public scoped packages:
 
-- `@archeon/core`
-- `@archeon/next`
+- `@archeon-ts/core`
+- `@archeon-ts/next`
 
 The release workflow is `.github/workflows/publish.yml`. It uses npm Trusted Publishing with GitHub Actions OIDC; it does not use an `NPM_TOKEN` repository secret.
 
 ## Namespace prerequisite
 
-The npm scope must be `@archeon`. An npm organization named `archeon-org` owns the different scope `@archeon-org`; it does not grant publishing rights to `@archeon/*`.
+The npm scope must be `@archeon`. An npm organization named `archeon-org` owns the different scope `@archeon-org`; it does not grant publishing rights to `@archeon-ts/*`.
 
 Before the first publication, confirm that the `archeon` scope is available to your npm account or that an owner of the existing `archeon` organization has granted your account permission to publish packages in that scope. Do not attempt the bootstrap publication until this is confirmed.
 
@@ -25,7 +25,7 @@ npm requires a package to exist before its Trusted Publisher can be configured. 
    pnpm build
    pnpm typecheck
    pnpm test
-   pnpm --filter @archeon/example-basic typecheck
+   pnpm --filter @archeon-ts/example-basic typecheck
    pnpm test:packages
    ```
 4. Publish the core package first, then the adapter. Run each command from its package directory:
@@ -42,7 +42,7 @@ This bootstrap is not part of the requested repository change and has not been p
 
 ## Configure Trusted Publishing on npmjs.com
 
-Configure the following publisher separately in the settings of **each** package (`@archeon/core` and `@archeon/next`):
+Configure the following publisher separately in the settings of **each** package (`@archeon-ts/core` and `@archeon-ts/next`):
 
 | npm Trusted Publisher field | Value |
 | --- | --- |
@@ -55,7 +55,7 @@ Configure the following publisher separately in the settings of **each** package
 
 The workflow requests `id-token: write` only for its publish job. npm CLI exchanges the GitHub OIDC identity for short-lived publishing credentials. For public packages published from this public GitHub repository, npm automatically creates provenance attestations.
 
-Do not configure `archeon-org` as the package scope or publisher owner. The GitHub publisher owner is `Ndmaz`, which is the GitHub repository owner; the npm scope remains `@archeon`.
+The npm organization scope is `@archeon-ts`. The GitHub publisher owner is `Ndmaz`, which is the GitHub repository owner; it is independent of the npm organization name.
 
 ## Running a later release
 

@@ -15,12 +15,12 @@ function run(command, args, options = {}) {
 }
 
 try {
-  run("pnpm", ["--filter", "@archeon/core", "pack", "--pack-destination", tarballsDir], { cwd: root });
-  run("pnpm", ["--filter", "@archeon/next", "pack", "--pack-destination", tarballsDir], { cwd: root });
+  run("pnpm", ["--filter", "@archeon-ts/core", "pack", "--pack-destination", tarballsDir], { cwd: root });
+  run("pnpm", ["--filter", "@archeon-ts/next", "pack", "--pack-destination", tarballsDir], { cwd: root });
 
   const tarballs = readdirSync(tarballsDir).filter((file) => file.endsWith(".tgz"));
-  const coreTarball = tarballs.find((file) => file.startsWith("archeon-core-"));
-  const nextTarball = tarballs.find((file) => file.startsWith("archeon-next-"));
+  const coreTarball = tarballs.find((file) => file.startsWith("archeon-ts-core-"));
+  const nextTarball = tarballs.find((file) => file.startsWith("archeon-ts-next-"));
   if (!coreTarball || !nextTarball) {
     throw new Error(`Expected both package tarballs. Found: ${tarballs.join(", ")}`);
   }
@@ -45,8 +45,8 @@ try {
     include: ["consumer.mts"],
   }, null, 2) + "\n");
 
-  writeFileSync(join(consumerDir, "consumer.mts"), `import { createApplication, defineModule, defineOperation } from "@archeon/core";
-import { createNextHandler } from "@archeon/next";
+  writeFileSync(join(consumerDir, "consumer.mts"), `import { createApplication, defineModule, defineOperation } from "@archeon-ts/core";
+import { createNextHandler } from "@archeon-ts/next";
 
 type Services = { greeting: { say(name: string): string } };
 type RequestContext = { requestId: string };
@@ -72,8 +72,8 @@ void handler;
 `);
 
   writeFileSync(join(consumerDir, "smoke.mjs"), `import assert from "node:assert/strict";
-import { createApplication, defineModule, defineOperation } from "@archeon/core";
-import { createNextHandler } from "@archeon/next";
+import { createApplication, defineModule, defineOperation } from "@archeon-ts/core";
+import { createNextHandler } from "@archeon-ts/next";
 
 const operation = defineOperation()({
   name: "smoke.greet",
@@ -159,15 +159,15 @@ console.log("Packed-package consumer smoke test passed.");
     return manifest;
   }
 
-  const coreManifest = inspectPackageTarball(corePath, "@archeon/core");
-  const nextManifest = inspectPackageTarball(nextPath, "@archeon/next");
-  if (nextManifest.dependencies?.["@archeon/core"] !== coreManifest.version) {
+  const coreManifest = inspectPackageTarball(corePath, "@archeon-ts/core");
+  const nextManifest = inspectPackageTarball(nextPath, "@archeon-ts/next");
+  if (nextManifest.dependencies?.["@archeon-ts/core"] !== coreManifest.version) {
     throw new Error(
-      `@archeon/next depends on @archeon/core@${nextManifest.dependencies?.["@archeon/core"]}, ` +
+      `@archeon-ts/next depends on @archeon-ts/core@${nextManifest.dependencies?.["@archeon-ts/core"]}, ` +
       `but the packed core package version is ${coreManifest.version}`,
     );
   }
-  console.log(`Cross-package dependency verified: @archeon/next -> @archeon/core@${coreManifest.version}`);
+  console.log(`Cross-package dependency verified: @archeon-ts/next -> @archeon-ts/core@${coreManifest.version}`);
   run("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", "--prefix", consumerDir,
     corePath, nextPath, "typescript@^5.9.3"]);
   run("npm", ["run", "typecheck", "--prefix", consumerDir]);
@@ -179,8 +179,8 @@ console.log("Packed-package consumer smoke test passed.");
   cpSync(join(root, "examples/next-app"), nextAppDir, { recursive: true });
   const nextAppPackagePath = join(nextAppDir, "package.json");
   const nextAppPackage = JSON.parse(readFileSync(nextAppPackagePath, "utf8"));
-  nextAppPackage.dependencies["@archeon/core"] = `file:${corePath}`;
-  nextAppPackage.dependencies["@archeon/next"] = `file:${nextPath}`;
+  nextAppPackage.dependencies["@archeon-ts/core"] = `file:${corePath}`;
+  nextAppPackage.dependencies["@archeon-ts/next"] = `file:${nextPath}`;
   writeFileSync(nextAppPackagePath, JSON.stringify(nextAppPackage, null, 2) + "\n");
 
   run("npm", ["install", "--no-audit", "--no-fund", "--prefix", nextAppDir]);

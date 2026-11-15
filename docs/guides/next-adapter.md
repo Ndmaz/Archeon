@@ -1,12 +1,12 @@
 # Next.js route-handler adapter
 
-The `@archeon/next` package provides a small adapter for App Router route handlers. It uses the Web `Request` and `Response` interfaces, which Next.js route handlers already support, so the framework-neutral core does not import Next.js types.
+The `@archeon-ts/next` package provides a small adapter for App Router route handlers. It uses the Web `Request` and `Response` interfaces, which Next.js route handlers already support, so the framework-neutral core does not import Next.js types.
 
 ## Example
 
 ```ts
 // app/api/users/route.ts
-import { createNextHandler } from "@archeon/next";
+import { createNextHandler } from "@archeon-ts/next";
 import { app } from "@/archeon/app";
 
 export const POST = createNextHandler(app, {

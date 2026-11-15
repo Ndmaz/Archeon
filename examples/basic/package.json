@@ -1,5 +1,5 @@
 {
-  "name": "@archeon/example-basic",
+  "name": "@archeon-ts/example-basic",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,7 +7,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@archeon/core": "workspace:*"
+    "@archeon-ts/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

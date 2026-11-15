@@ -1,5 +1,5 @@
 {
-  "name": "@archeon/example-next-app",
+  "name": "@archeon-ts/example-next-app",
   "private": true,
   "version": "0.0.0",
   "scripts": {
@@ -9,8 +9,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@archeon/core": "0.0.1",
-    "@archeon/next": "0.0.1",
+    "@archeon-ts/core": "^0.1.0",
+    "@archeon-ts/next": "^0.1.0",
     "next": "^15.5.9",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"

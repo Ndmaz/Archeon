@@ -9,7 +9,7 @@ Use this checklist for the first public release. Do not publish directly from a 
 - [x] Prepare the `0.1.0` release-candidate changelog entry; add the actual release date and final notes before publication.
 - [ ] Confirm the root MIT license and both package-level license copies are present.
 - [ ] Confirm both package manifests declare `license: MIT`, repository metadata, and `publishConfig.access: public`.
-- [ ] Confirm `@archeon/next` depends on the exact released `@archeon/core` version.
+- [ ] Confirm `@archeon-ts/next` depends on the exact released `@archeon-ts/core` version.
 - [ ] Run `pnpm install --frozen-lockfile`.
 - [ ] Run `pnpm build`, `pnpm typecheck`, `pnpm test`, and `pnpm test:packages`.
 - [ ] Confirm the Next.js example builds against the packed package artifacts.
@@ -18,10 +18,10 @@ Use this checklist for the first public release. Do not publish directly from a 
 
 ## Publish order
 
-1. Publish `@archeon/core` with public access.
+1. Publish `@archeon-ts/core` with public access.
 2. Verify the published core version and its metadata on npm.
-3. Ensure `@archeon/next` declares that exact core version (not `workspace:*`) in its packed manifest.
-4. Publish `@archeon/next` with public access.
+3. Ensure `@archeon-ts/next` declares that exact core version (not `workspace:*`) in its packed manifest.
+4. Publish `@archeon-ts/next` with public access.
 5. Install both published packages into a clean consumer and run the basic example checks.
 6. Create a GitHub release for the same version and commit, with release notes derived from the changelog.
 
