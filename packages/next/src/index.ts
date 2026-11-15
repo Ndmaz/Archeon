@@ -1,4 +1,4 @@
-import type { ArcheonApplication } from "@archeon/core";
+import type { ArcheonApplication } from "@archeon-ts/core";
 
 type OperationNameOf<TApp> =
   TApp extends { execute: (operationName: infer TName, ...args: any[]) => any }
