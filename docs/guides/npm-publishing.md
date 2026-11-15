@@ -9,15 +9,13 @@ The release workflow is `.github/workflows/publish.yml`. It uses npm Trusted Pub
 
 ## Namespace prerequisite
 
-The npm scope must be `@archeon`. An npm organization named `archeon-org` owns the different scope `@archeon-org`; it does not grant publishing rights to `@archeon-ts/*`.
-
-Before the first publication, confirm that the `archeon` scope is available to your npm account or that an owner of the existing `archeon` organization has granted your account permission to publish packages in that scope. Do not attempt the bootstrap publication until this is confirmed.
+The official npm scope is `@archeon-ts`, owned by the npm organization `archeon-ts`. Before the first publication, create that organization on npm and confirm your account can publish public packages under the scope. Do not attempt the bootstrap publication until this is confirmed.
 
 ## One-time bootstrap: create each package
 
 npm requires a package to exist before its Trusted Publisher can be configured. Therefore the first publication of each package is a one-time, interactive bootstrap step. This is deliberately not automated in the GitHub workflow.
 
-1. Confirm you can publish under `@archeon` and that your npm account has two-factor authentication enabled.
+1. Confirm you can publish under `@archeon-ts` and that your npm account has two-factor authentication enabled.
 2. On your own machine, from a clean checkout of the intended release commit, authenticate interactively with npm (for example, `npm login`). Never put an npm token in this repository or in chat.
 3. Install the repository dependencies and run the same release checks used by CI:
    ```sh
