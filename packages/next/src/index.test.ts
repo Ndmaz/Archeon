@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createApplication, defineModule, defineOperation } from "@archeon/core";
+import { createApplication, defineModule, defineOperation } from "@archeon-ts/core";
 import { createNextHandler } from "./index.js";
 
 type Services = {
