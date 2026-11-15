@@ -9,6 +9,8 @@ on:
         default: "0.1.0"
         type: string
 
+# npm Trusted Publishing exchanges this job's GitHub OIDC identity for
+# short-lived npm publish credentials. No NPM_TOKEN secret is used.
 permissions:
   contents: read
 
@@ -23,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
     steps:
       - name: Check out main
         uses: actions/checkout@v4
@@ -33,44 +36,54 @@ jobs:
           version: 10.18.3
           run_install: false
 
-      - name: Set up Node.js and npm authentication
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
-          cache: pnpm
+          node-version: 24
+          package-manager-cache: false
 
-      - name: Require npm publishing token
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Ensure npm CLI supports trusted publishing
         run: |
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "::error::Configure the NPM_TOKEN repository secret before publishing."
-            exit 1
-          fi
+          npm install --global npm@11.5.1
+          npm --version
+          node --version
 
-      - name: Verify release version
+      - name: Verify release version and package metadata
         env:
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
+
           const expected = process.env.RELEASE_VERSION;
           if (!/^0\.\d+\.\d+$/.test(expected)) {
             throw new Error(`Expected a 0.x.y release version, received: ${expected}`);
           }
-          for (const path of ['packages/core/package.json', 'packages/next/package.json']) {
+
+          const expectedPackages = [
+            ['packages/core/package.json', '@archeon/core'],
+            ['packages/next/package.json', '@archeon/next'],
+          ];
+
+          for (const [path, expectedName] of expectedPackages) {
             const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
+            if (pkg.name !== expectedName) {
+              throw new Error(`${path} must be named ${expectedName}; received ${pkg.name}`);
+            }
             if (pkg.version !== expected) {
               throw new Error(`${path} has version ${pkg.version}; expected ${expected}`);
             }
             if (pkg.license !== 'MIT' || pkg.publishConfig?.access !== 'public') {
               throw new Error(`${path} is missing MIT/public npm publication metadata`);
             }
+            if (pkg.repository?.url !== 'https://github.com/Ndmaz/Archeon.git') {
+              throw new Error(`${path} repository.url must identify Ndmaz/Archeon for npm provenance`);
+            }
           }
+
           const next = JSON.parse(fs.readFileSync('packages/next/package.json', 'utf8'));
           if (next.dependencies?.['@archeon/core'] !== 'workspace:*') {
-            throw new Error('Expected the workspace dependency to be workspace:* before pnpm publish rewrites it.');
+            throw new Error('Expected @archeon/next to depend on @archeon/core through workspace:*.');
           }
           NODE
 
@@ -85,13 +98,13 @@ jobs:
           pnpm --filter @archeon/example-basic typecheck
           pnpm test:packages
 
-      # Publishing is retry-safe: if core succeeds but the adapter publish fails,
-      # rerunning the workflow skips the already-published core version.
+      # npm view is intentionally unauthenticated: both packages are public.
+      # A failed lookup is treated as "not found"; npm publish will then fail
+      # safely if the registry is unavailable or the package cannot be published.
       - name: Check whether core version is already published
         id: core-version
         env:
           RELEASE_VERSION: ${{ inputs.version }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           if npm view "@archeon/core@$RELEASE_VERSION" version >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
@@ -100,18 +113,24 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Publish core first
+      - name: Pack core
         if: steps.core-version.outputs.exists != 'true'
         working-directory: packages/core
-        run: pnpm publish --access public --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/archeon-core"
+          pnpm pack --pack-destination "$RUNNER_TEMP/archeon-core"
+          test "$(find "$RUNNER_TEMP/archeon-core" -maxdepth 1 -name '*.tgz' -type f | wc -l)" -eq 1
+
+      - name: Publish core with npm OIDC
+        if: steps.core-version.outputs.exists != 'true'
+        run: |
+          TARBALL="$(find "$RUNNER_TEMP/archeon-core" -maxdepth 1 -name '*.tgz' -type f -print -quit)"
+          npm publish "$TARBALL" --access public
 
       - name: Check whether adapter version is already published
         id: next-version
         env:
           RELEASE_VERSION: ${{ inputs.version }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           if npm view "@archeon/next@$RELEASE_VERSION" version >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
@@ -120,9 +139,30 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Publish Next.js adapter second
+      - name: Pack Next.js adapter
         if: steps.next-version.outputs.exists != 'true'
         working-directory: packages/next
-        run: pnpm publish --access public --no-git-checks
+        run: |
+          mkdir -p "$RUNNER_TEMP/archeon-next"
+          pnpm pack --pack-destination "$RUNNER_TEMP/archeon-next"
+          test "$(find "$RUNNER_TEMP/archeon-next" -maxdepth 1 -name '*.tgz' -type f | wc -l)" -eq 1
+          TARBALL="$(find "$RUNNER_TEMP/archeon-next" -maxdepth 1 -name '*.tgz' -type f -print -quit)"
+          tar -xOf "$TARBALL" package/package.json | node --input-type=module -e '
+            import fs from "node:fs";
+            const pkg = JSON.parse(fs.readFileSync(0, "utf8"));
+            const expected = process.env.RELEASE_VERSION;
+            if (pkg.name !== "@archeon/next" || pkg.version !== expected) {
+              throw new Error("Packed adapter name/version does not match the requested release.");
+            }
+            if (pkg.dependencies?.["@archeon/core"] !== expected) {
+              throw new Error("Packed adapter must depend on the matching published @archeon/core version.");
+            }
+          '
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          RELEASE_VERSION: ${{ inputs.version }}
+
+      - name: Publish Next.js adapter with npm OIDC
+        if: steps.next-version.outputs.exists != 'true'
+        run: |
+          TARBALL="$(find "$RUNNER_TEMP/archeon-next" -maxdepth 1 -name '*.tgz' -type f -print -quit)"
+          npm publish "$TARBALL" --access public
