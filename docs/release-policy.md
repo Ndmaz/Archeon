@@ -14,7 +14,7 @@ Archeon is pre-release 0.x software. Both package manifests currently target ver
 
 This describes the environment exercised by CI; it is not a promise that every version in these major ranges is supported.
 
-The `@archeon/next` workspace manifest uses `workspace:*` for local development. The release smoke test must confirm pnpm rewrites that dependency to the exact core package version in the packed tarball before publication.
+The `@archeon-ts/next` workspace manifest uses `workspace:*` for local development. The release smoke test must confirm pnpm rewrites that dependency to the exact core package version in the packed tarball before publication.
 
 ## Pre-1.0 versioning
 
@@ -22,8 +22,8 @@ The `@archeon/next` workspace manifest uses `workspace:*` for local development.
 - Each published release should include a changelog entry and a GitHub release.
 - Do not publish until the packed-package consumer test and Next.js example build pass.
 - Both scoped packages declare `publishConfig.access: public`; CI verifies this metadata in the tarballs.
-- Publish `@archeon/core` before `@archeon/next`, because the adapter depends on the core package. Verify the published core version satisfies the adapter dependency before publishing the adapter.
-- Keep runtime dependencies minimal and avoid introducing framework dependencies into @archeon/core.
+- Publish `@archeon-ts/core` before `@archeon-ts/next`, because the adapter depends on the core package. Verify the published core version satisfies the adapter dependency before publishing the adapter.
+- Keep runtime dependencies minimal and avoid introducing framework dependencies into @archeon-ts/core.
 
 ## License
 

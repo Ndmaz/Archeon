@@ -3,7 +3,7 @@ import {
   defineModule,
   defineOperation,
   type InputParser,
-} from "@archeon/core";
+} from "@archeon-ts/core";
 
 type Services = {
   users: {

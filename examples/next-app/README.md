@@ -1,13 +1,13 @@
 # Archeon + Next.js App Router example
 
-A minimal Next.js App Router application that runs an Archeon operation through @archeon/next.
+A minimal Next.js App Router application that runs an Archeon operation through @archeon-ts/next.
 
 ## Prerequisites
 
 - Node.js 20 or newer
 - npm
 
-After @archeon/core and @archeon/next are published, install dependencies and run:
+After @archeon-ts/core and @archeon-ts/next are published, install dependencies and run:
 
 ```sh
 cd examples/next-app

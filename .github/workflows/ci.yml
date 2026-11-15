@@ -42,7 +42,7 @@ jobs:
         run: pnpm test
 
       - name: Typecheck basic example
-        run: pnpm --filter @archeon/example-basic typecheck
+        run: pnpm --filter @archeon-ts/example-basic typecheck
 
       - name: Test packed packages from an external consumer
         run: pnpm test:packages

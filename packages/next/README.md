@@ -1,20 +1,20 @@
-# @archeon/next
+# @archeon-ts/next
 
-A thin Next.js App Router adapter for Archeon applications. It accepts standard Web `Request` objects and returns `Response` objects, keeping Next.js types out of `@archeon/core`.
+A thin Next.js App Router adapter for Archeon applications. It accepts standard Web `Request` objects and returns `Response` objects, keeping Next.js types out of `@archeon-ts/core`.
 
 > **Status:** pre-release 0.x software. The public API may change before 1.0.0.
 
 ## Install
 
 ```sh
-npm install @archeon/core @archeon/next
+npm install @archeon-ts/core @archeon-ts/next
 ```
 
 ## App Router example
 
 ```ts
 // app/api/greet/route.ts
-import { createNextHandler } from "@archeon/next";
+import { createNextHandler } from "@archeon-ts/next";
 import { app } from "@/archeon/app";
 
 export const GET = createNextHandler(app, {

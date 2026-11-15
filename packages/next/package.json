@@ -1,5 +1,5 @@
 {
-  "name": "@archeon/next",
+  "name": "@archeon-ts/next",
   "version": "0.1.0",
   "description": "Next.js route-handler adapter for Archeon applications",
   "type": "module",
@@ -20,7 +20,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@archeon/core": "workspace:*"
+    "@archeon-ts/core": "workspace:*"
   },
   "license": "MIT",
   "repository": {

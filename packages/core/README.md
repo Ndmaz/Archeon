@@ -1,4 +1,4 @@
-# @archeon/core
+# @archeon-ts/core
 
 Framework-neutral operation runtime for TypeScript applications.
 
@@ -7,13 +7,13 @@ Framework-neutral operation runtime for TypeScript applications.
 ## Install
 
 ```sh
-npm install @archeon/core
+npm install @archeon-ts/core
 ```
 
 ## Quick start
 
 ```ts
-import { createApplication, defineModule, defineOperation } from "@archeon/core";
+import { createApplication, defineModule, defineOperation } from "@archeon-ts/core";
 
 type Services = {
   greetings: { say(name: string): string };

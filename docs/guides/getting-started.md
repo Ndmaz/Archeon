@@ -25,7 +25,7 @@ const services: Services = {
 ## 2. Define an operation and module
 
 ```ts
-import { defineModule, defineOperation, createApplication } from "@archeon/core";
+import { defineModule, defineOperation, createApplication } from "@archeon-ts/core";
 
 type RequestContext = {
   requestId: string;
@@ -82,11 +82,11 @@ Core propagates parser and handler errors unchanged. Decide how to handle errors
 
 ## 4. Use the Next.js adapter
 
-The `@archeon/next` package exports `createNextHandler` for App Router route handlers:
+The `@archeon-ts/next` package exports `createNextHandler` for App Router route handlers:
 
 ```ts
 // app/api/users/route.ts
-import { createNextHandler } from "@archeon/next";
+import { createNextHandler } from "@archeon-ts/next";
 import { app } from "@/archeon/app";
 
 export const POST = createNextHandler(app, {

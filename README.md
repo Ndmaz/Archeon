@@ -17,14 +17,14 @@ Archeon provides a typed, operation-first model for defining application capabil
 - **Plugin** — extends the framework through explicit integration points.
 - **Adapter** — connects Archeon to an environment such as Next.js or React.
 
-The public entry point is `defineOperation()`. The current v0 contract is documented in the accepted ADRs and implemented in `@archeon/core`; it remains pre-release and may change before 1.0.
+The public entry point is `defineOperation()`. The current v0 contract is documented in the accepted ADRs and implemented in `@archeon-ts/core`; it remains pre-release and may change before 1.0.
 
 ## Repository status
 
 The repository currently includes:
 
-- `@archeon/core` — operation definitions, modules, application construction, parsing, execution plans, and typed execution context.
-- `@archeon/next` — a thin adapter for Next.js App Router route handlers using standard Web `Request`/`Response` APIs.
+- `@archeon-ts/core` — operation definitions, modules, application construction, parsing, execution plans, and typed execution context.
+- `@archeon-ts/next` — a thin adapter for Next.js App Router route handlers using standard Web `Request`/`Response` APIs.
 - `examples/basic` — a framework-neutral consumer example.
 - `examples/next-app` — a minimal Next.js App Router app; CI builds it against the packed package tarballs.
 - `docs/adr/` and `docs/guides/` — architecture decisions and usage guides.

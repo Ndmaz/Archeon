@@ -9,7 +9,7 @@ The core now supports typed, per-invocation request context. The first adapter s
 
 ## Decision
 
-The `@archeon/next` package exports `createNextHandler(app, options)`. It accepts and returns standard Web API types: `Request` and `Response`. Next.js App Router handlers support these types, so the adapter does not need to import `NextRequest` or depend on Next.js internals.
+The `@archeon-ts/next` package exports `createNextHandler(app, options)`. It accepts and returns standard Web API types: `Request` and `Response`. Next.js App Router handlers support these types, so the adapter does not need to import `NextRequest` or depend on Next.js internals.
 
 The options are explicit:
 

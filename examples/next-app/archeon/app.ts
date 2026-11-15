@@ -1,4 +1,4 @@
-import { createApplication, defineModule, defineOperation } from "@archeon/core";
+import { createApplication, defineModule, defineOperation } from "@archeon-ts/core";
 
 type Services = {
   greeting: { say(name: string): { message: string } };

@@ -1,4 +1,4 @@
-import { createNextHandler } from "@archeon/next";
+import { createNextHandler } from "@archeon-ts/next";
 import { app } from "../../../archeon/app";
 
 export const GET = createNextHandler(app, {
