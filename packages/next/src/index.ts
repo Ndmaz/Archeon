@@ -48,27 +48,43 @@ export function createNextHandler<
   options: NextHandlerOptions<TApp, TOperation>,
 ): (request: Request) => Promise<Response> {
   return async (request: Request): Promise<Response> => {
+    const fail = async (error: unknown): Promise<Response> => {
+      if (options.onError) return await options.onError(error, request);
+      return Response.json(
+        { error: "Internal Server Error" },
+        { status: 500 },
+      );
+    };
+
+    let result: unknown;
     try {
       const input = await options.getInput(request);
       const requestContext = options.getRequestContext
         ? await options.getRequestContext(request)
         : undefined;
 
-      const result = requestContext === undefined
+      result = requestContext === undefined
         ? await app.execute(options.operation as never, input)
         : await app.execute(
             options.operation as never,
             input,
             { request: requestContext } as never,
           );
+    } catch (error) {
+      return await fail(error);
+    }
 
+    // undefined has no JSON representation; the operation itself succeeded.
+    if (result === undefined) {
+      return new Response(null, { status: options.successStatus ?? 204 });
+    }
+
+    try {
       return Response.json(result, { status: options.successStatus ?? 200 });
     } catch (error) {
-      if (options.onError) return await options.onError(error, request);
-      return Response.json(
-        { error: "Internal Server Error" },
-        { status: 500 },
-      );
+      // Serialization failed after execution, so report a transport failure
+      // without rerunning the operation.
+      return await fail(error);
     }
   };
 }
