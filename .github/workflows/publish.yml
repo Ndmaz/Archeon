@@ -57,7 +57,7 @@ jobs:
           import fs from 'node:fs';
 
           const expected = process.env.RELEASE_VERSION;
-          if (!/^0\\.\\d+\\.\\d+$/.test(expected)) {
+          if (!/^0\.\d+\.\d+$/.test(expected)) {
             throw new Error(`Expected a 0.x.y release version, received: ${expected}`);
           }
 
@@ -147,6 +147,20 @@ jobs:
           mkdir -p "$RUNNER_TEMP/archeon-next"
           pnpm pack --pack-destination "$RUNNER_TEMP/archeon-next"
           test "$(find "$RUNNER_TEMP/archeon-next" -maxdepth 1 -name '*.tgz' -type f | wc -l)" -eq 1
+          TARBALL="$(find "$RUNNER_TEMP/archeon-next" -maxdepth 1 -name '*.tgz' -type f -print -quit)"
+          tar -xOf "$TARBALL" package/package.json | node --input-type=module -e '
+            import fs from "node:fs";
+            const pkg = JSON.parse(fs.readFileSync(0, "utf8"));
+            const expected = process.env.RELEASE_VERSION;
+            if (pkg.name !== "@archeon/next" || pkg.version !== expected) {
+              throw new Error("Packed adapter name/version does not match the requested release.");
+            }
+            if (pkg.dependencies?.["@archeon/core"] !== expected) {
+              throw new Error("Packed adapter must depend on the matching published @archeon/core version.");
+            }
+          '
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
 
       - name: Publish Next.js adapter with npm OIDC
         if: steps.next-version.outputs.exists != 'true'
